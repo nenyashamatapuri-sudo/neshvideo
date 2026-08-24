@@ -1,0 +1,1678 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Nesh — homepage
+   A printed-page vocabulary in three colours — red, white, black — with the
+   display type slanted and running off the edge of the sheet, as it does on a
+   film programme.
+   ========================================================================== */
+
+:root {
+  /* Red, white, black. No fourth colour anywhere in the system. */
+  --ink: #0c0a0a;
+  --ink-2: #161313;
+  --paper: #f2ede3;
+  --paper-dim: #948b86;
+  --red: #e3251b;
+  --red-deep: #a8140d;
+  /*
+   * Green, gold, red, black — the Zimbabwe flag, which is also the palette
+   * every one of the reference covers is working in.
+   *
+   * Rationed hard: ornament, folios and marks only. Never photography, never
+   * body copy. Red still carries the site; green and gold are the accent pair
+   * that gives it a home.
+   */
+  --gold: #e9a733;
+  --gold-deep: #b8791c;
+  --green: #0e7a3c;
+  --green-deep: #095c2c;
+
+  --rule: color-mix(in srgb, var(--paper) 22%, transparent);
+  --rule-red: color-mix(in srgb, var(--red) 45%, transparent);
+  /* The oblique the display type is set on, matching the reference. */
+  --slant: -9deg;
+  --edge: clamp(1.25rem, 3.4vw, 3.25rem);
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --slow: 900ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--ink);
+  /* The stage is fixed; this is what actually scrolls. */
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--red);
+  color: var(--paper);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+/* Small caps-ish label used all over the furniture. */
+.label,
+.nav__links a,
+.nav__counter,
+.strip__label,
+.rail__name,
+.hint,
+.masthead__kicker,
+.masthead__meta,
+.masthead__cta {
+  font-size: clamp(0.6rem, 0.74vw, 0.72rem);
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/*
+ * The flag band: green, gold, red, black stacked into a single rule. The most
+ * economical way to put the whole palette on a page at once, and it reads at
+ * any width — a divider that says where the work comes from without needing a
+ * word of explanation.
+ */
+.flag-rule {
+  height: 0.42rem;
+  background-image: linear-gradient(
+    to bottom,
+    var(--green) 0 25%,
+    var(--gold) 25% 50%,
+    var(--red) 50% 75%,
+    var(--ink) 75% 100%
+  );
+}
+
+/*
+ * The chevron course from the Great Enclosure at Great Zimbabwe, used as a
+ * rule. Drawn as a stroked zigzag so it matches the one the generator prints
+ * onto the pages — screen and paper carry the same band.
+ */
+.chevron {
+  height: 0.8rem;
+  background-repeat: repeat-x;
+  background-size: auto 100%;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='26' height='12' viewBox='0 0 26 12'>\
+<path d='M0 10.5 L6.5 1.5 L13 10.5 L19.5 1.5 L26 10.5' fill='none' \
+stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
+}
+
+/* The recurring mark: a short red bar that opens a label. Used on the printed
+   pages too, so screen and paper share one piece of furniture. */
+.bar::before {
+  content: "";
+  display: block;
+  width: 2.4rem;
+  height: 0.32rem;
+  margin-bottom: 0.75rem;
+  background: var(--red);
+}
+
+/* ------------------------------------------------------------------ shell */
+
+.shell {
+  opacity: 0;
+  transition: opacity 700ms var(--ease);
+}
+.shell.is-ready {
+  opacity: 1;
+}
+
+.stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Oxblood cast behind the binder so the page isn't floating on flat black —
+   the colour of the book bleeding onto the wall behind it. */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 64% at 52% 44%, color-mix(in srgb, var(--red-deep) 40%, transparent) 0%, transparent 72%),
+    radial-gradient(90% 70% at 50% 122%, color-mix(in srgb, var(--red) 14%, transparent) 0%, transparent 65%);
+  mix-blend-mode: screen;
+  opacity: 0.42;
+}
+
+.track {
+  position: relative;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.canvas-layer {
+  position: absolute;
+  inset: 0;
+}
+.canvas-layer canvas {
+  display: block;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  pointer-events: none;
+}
+.overlay a,
+.overlay button {
+  pointer-events: auto;
+}
+
+/* Vignette so type always has ground to sit on, whatever the page art does. */
+.overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to top, rgb(12 10 10 / 0.96) 0%, rgb(12 10 10 / 0.72) 34%, rgb(12 10 10 / 0) 62%),
+    linear-gradient(to bottom, rgb(12 10 10 / 0.92) 0%, rgb(12 10 10 / 0.5) 9%, rgb(12 10 10 / 0) 30%),
+    linear-gradient(to right, rgb(12 10 10 / 0.9) 0%, rgb(12 10 10 / 0.34) 24%, rgb(12 10 10 / 0) 42%),
+    radial-gradient(130% 100% at 50% 45%, transparent 55%, rgb(12 10 10 / 0.34) 100%);
+}
+
+/* -------------------------------------------------------------------- nav */
+
+.nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1rem, 3vw, 3rem);
+  padding: clamp(1rem, 2.4vw, 1.9rem) var(--edge);
+}
+
+.nav__mark {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+  letter-spacing: 0.04em;
+  transform: skewX(var(--slant));
+}
+.nav__mark span {
+  color: var(--red);
+}
+
+/*
+ * The bar is set in mono, the same voice as the edge printing on the film and
+ * the small print on the pages — it reads as a technical index rather than as
+ * a website menu, and the numerals give it something to hang on.
+ */
+.nav__links {
+  display: flex;
+  gap: clamp(0.9rem, 2.4vw, 2.4rem);
+}
+
+.nav__links a {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 0.45em;
+  padding-bottom: 0.35em;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--paper-dim);
+  transition: color 260ms var(--ease);
+}
+
+.nav__no {
+  font-size: 0.82em;
+  color: var(--gold);
+  transition: opacity 260ms var(--ease);
+  opacity: 0.55;
+}
+
+/* The rule grows from the left rather than fading in. */
+.nav__links a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 380ms var(--ease);
+}
+
+.nav__links a:hover,
+.nav__links a[data-active] {
+  color: var(--paper);
+}
+.nav__links a:hover .nav__no,
+.nav__links a[data-active] .nav__no {
+  opacity: 1;
+}
+.nav__links a:hover::after,
+.nav__links a[data-active]::after {
+  transform: scaleX(1);
+}
+
+.nav__end {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.4vw, 2rem);
+}
+
+.nav__aside {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  transition: color 260ms var(--ease);
+}
+.nav__aside:hover {
+  color: var(--gold);
+}
+
+.nav__counter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.nav__counter-now {
+  color: var(--red);
+}
+.nav__counter-rule {
+  width: clamp(1.25rem, 3vw, 2.75rem);
+  height: 1px;
+  background: var(--rule);
+}
+.nav__counter-all {
+  color: var(--paper-dim);
+}
+
+/* --------------------------------------------------------------- masthead */
+
+.masthead {
+  position: relative;
+  align-self: end;
+  padding: 0 var(--edge) clamp(0.5rem, 1.6vw, 1.5rem);
+  max-width: min(100%, 54ch);
+}
+
+.masthead__kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 0 clamp(0.5rem, 1vw, 0.9rem);
+  color: var(--paper-dim);
+  animation: rise 700ms 120ms var(--ease) both;
+}
+.masthead__index {
+  display: grid;
+  place-items: center;
+  min-width: 2.35em;
+  padding: 0.4em 0.5em;
+  background: var(--red);
+  color: var(--paper);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  transition: background var(--slow) var(--ease);
+}
+
+.masthead__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 0.22em;
+  margin: 0;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-weight: 400;
+  /* Big enough that long chapter names run past the edge of the sheet. */
+  font-size: clamp(3.4rem, 12.8vw, 12.5rem);
+  line-height: 0.76;
+  letter-spacing: -0.03em;
+  color: var(--red);
+  /* The oblique cut of the reference masthead. Anton has no italic, so the
+     slant is applied geometrically. */
+  transform: skewX(var(--slant));
+  transform-origin: 0 100%;
+  /* Optical crop: the masthead starts fractionally off-page, like the ad. */
+  margin-left: -0.045em;
+}
+
+.masthead__word {
+  display: block;
+  text-shadow: 0.036em 0.036em 0 var(--ink);
+  /* Each word wipes up behind its own edge. */
+  clip-path: inset(-20% 0 0 0);
+  animation: wipe-up 1000ms var(--ease) both;
+}
+
+/**
+ * The photograph cut out of the type.
+ *
+ * The fill is anchored to the whole masthead rather than to each word, so one
+ * continuous image runs across both lines instead of repeating per word. Only
+ * applied where the browser supports it — everywhere else the type stays flat
+ * red, which is the same design a step quieter.
+ */
+/**
+ * The photograph cut out of the type.
+ *
+ * The fill sits on each word rather than on the line that contains them. That
+ * matters: `background-clip: text` is clipped by the element that *carries*
+ * the background, and in Chromium anything on a descendant that creates a
+ * stacking context — a transform, a clip-path, an isolation — silently stops
+ * the whole thing painting. Putting background and glyphs on the same element
+ * removes that class of bug entirely.
+ *
+ * Red is screened under the picture so the shadow areas of a letterform never
+ * go black-on-black: the word always reads, and the highlights still come
+ * through as photograph.
+ */
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .masthead__word {
+    background-image:
+      linear-gradient(var(--red), var(--red)),
+      var(--fill);
+    background-blend-mode: screen;
+    background-size: cover;
+    background-position: center 42%;
+    background-repeat: no-repeat;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    text-shadow: none;
+    /* The reveal is opacity only — a transform here would clip the fill away. */
+    clip-path: none;
+    animation-name: fade-in;
+  }
+}
+
+.masthead__word:nth-child(2) {
+  animation-delay: 90ms;
+}
+@keyframes wipe-up {
+  from {
+    transform: translateY(0.9em) rotate(1.2deg);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) rotate(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rise {
+  from {
+    transform: translateY(0.8rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.masthead__foot {
+  display: grid;
+  justify-items: start;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin-top: clamp(1rem, 2vw, 1.8rem);
+  padding-top: clamp(0.8rem, 1.6vw, 1.3rem);
+  border-top: 2px solid var(--rule);
+  animation: rise 800ms 260ms var(--ease) both;
+}
+
+.masthead__blurb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  max-width: 46ch;
+  margin: 0;
+  font-size: clamp(0.95rem, 1.3vw, 1.25rem);
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--paper);
+  text-wrap: pretty;
+}
+
+/* The single number, set as a chip so it reads as data, not prose. */
+.masthead__count {
+  padding: 0.4em 0.7em;
+  background: var(--red);
+  color: var(--paper);
+  font-size: clamp(0.56rem, 0.68vw, 0.66rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.95em 1.3em;
+  overflow: hidden;
+  background: var(--red);
+  color: var(--paper);
+  font-size: clamp(0.62rem, 0.78vw, 0.74rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.cta span,
+.cta svg {
+  position: relative;
+  z-index: 1;
+}
+.cta svg {
+  width: 1.5rem;
+  transition: transform 380ms var(--ease);
+}
+/* The fill wipes across from the left rather than simply changing colour. */
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 420ms var(--ease);
+}
+.cta:hover {
+  color: var(--ink);
+}
+.cta:hover::before {
+  transform: scaleX(1);
+}
+.cta:hover svg {
+  transform: translateX(0.3rem);
+}
+
+/* ------------------------------------------------------------------- rail */
+
+.rail {
+  position: absolute;
+  right: var(--edge);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+}
+.rail ul {
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rail button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;
+  padding: 0.42rem 0;
+  width: 100%;
+}
+.rail__no {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
+  color: var(--paper-dim);
+  opacity: 0;
+  transform: translateX(0.4rem);
+  transition: opacity 300ms var(--ease), transform 300ms var(--ease);
+}
+.rail__tick {
+  width: 1.6rem;
+  height: 1px;
+  background: var(--paper-dim);
+  opacity: 0.45;
+  transition: width 420ms var(--ease), background 420ms var(--ease),
+    opacity 420ms var(--ease);
+}
+.rail__name {
+  white-space: nowrap;
+  color: var(--paper-dim);
+  font-weight: 700;
+  transition: color 300ms var(--ease);
+}
+.rail li.is-active .rail__name,
+.rail button:hover .rail__name {
+  color: var(--paper);
+}
+.rail li.is-active .rail__tick {
+  width: 2.4rem;
+  background: var(--red);
+  opacity: 1;
+}
+.rail li.is-active .rail__no,
+.rail button:hover .rail__no {
+  opacity: 1;
+  transform: translateX(0);
+}
+.rail button:hover .rail__tick {
+  width: 2.9rem;
+  opacity: 1;
+}
+/* ------------------------------------------------------------------- hint */
+
+.hint {
+  position: absolute;
+  right: var(--edge);
+  bottom: clamp(7.5rem, 13vh, 10rem);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  color: var(--paper-dim);
+  transition: opacity 500ms var(--ease), transform 500ms var(--ease);
+}
+.hint__rule {
+  display: block;
+  width: 2.5rem;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left;
+  animation: hint-pulse 2.4s var(--ease) infinite;
+}
+.hint.is-gone {
+  opacity: 0;
+  transform: translateY(0.6rem);
+  pointer-events: none;
+}
+
+@keyframes hint-pulse {
+  0%, 100% { transform: scaleX(0.35); opacity: 0.5; }
+  50% { transform: scaleX(1); opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ strip */
+
+.strip {
+  position: relative;
+  padding: 0 var(--edge) clamp(0.9rem, 2vw, 1.6rem);
+}
+
+.strip__label {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 0.6rem;
+  color: var(--paper-dim);
+}
+.strip__label span {
+  color: color-mix(in srgb, var(--paper-dim) 65%, transparent);
+}
+.strip__label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+.strip__row {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.strip__row::-webkit-scrollbar {
+  display: none;
+}
+
+.strip__cell {
+  flex: 0 0 auto;
+  animation: rise 600ms var(--ease) both;
+  animation-delay: calc(var(--i) * 40ms + 300ms);
+}
+.strip__cell button {
+  position: relative;
+  display: block;
+  width: clamp(4.2rem, 7.4vw, 7rem);
+  aspect-ratio: 10 / 7;
+  overflow: hidden;
+  border: 1px solid transparent;
+  opacity: 0.55;
+  transition: filter 380ms var(--ease), border-color 380ms var(--ease),
+    transform 380ms var(--ease);
+}
+.strip__cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.strip__cell-no {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 0.15em 0.4em;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  background: var(--ink);
+  color: var(--paper-dim);
+  opacity: 0;
+  transition: opacity 300ms var(--ease);
+}
+.strip__cell button:hover {
+  opacity: 1;
+  transform: translateY(-3px);
+  border-color: var(--rule);
+}
+.strip__cell button:hover .strip__cell-no {
+  opacity: 1;
+}
+.strip__cell.is-active button {
+  opacity: 1;
+  border-color: var(--red);
+  box-shadow: inset 0 0 0 2px var(--red);
+}
+.strip__cell.is-active .strip__cell-no {
+  opacity: 1;
+  background: var(--red);
+  color: var(--paper);
+}
+
+/* --------------------------------------------------------------- noscript */
+
+.noscript {
+  position: relative;
+  z-index: 10;
+  padding: var(--edge);
+  background: var(--ink);
+}
+.noscript h1 {
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(2rem, 7vw, 5rem);
+  line-height: 0.9;
+}
+.noscript ul {
+  display: grid;
+  gap: 1px;
+  padding: 0;
+  list-style: none;
+  background: var(--rule);
+}
+.noscript a {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1.2rem 0;
+  background: var(--ink);
+}
+.noscript strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 1.6rem;
+}
+
+/* ------------------------------------------------------------- responsive */
+
+@media (max-width: 880px) {
+  .rail,
+  .hint {
+    display: none;
+  }
+  /* The counter is the first thing to go — the contact strip already shows
+     position, and the links matter more than the numbers. */
+  .nav__counter {
+    display: none;
+  }
+  .nav {
+    gap: 1rem;
+  }
+  .nav__links {
+    gap: clamp(0.7rem, 3.4vw, 1.2rem);
+  }
+  .nav__no {
+    display: none;
+  }
+  .masthead {
+    max-width: none;
+  }
+  .masthead__title {
+    font-size: clamp(2.6rem, 15vw, 5rem);
+  }
+  .masthead__cta {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+/* Motion is decoration here — the page still reads fine without any of it. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .hint__rule {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* ==========================================================================
+   About — a page of prints laid on the desk and taped down.
+   Deep red ground, paper white, one big figure. Same three colours.
+   ========================================================================== */
+
+.about {
+  --stock: #f2ede3;
+  --tape: #e8dfcd;
+  position: relative;
+  max-width: 108rem;
+  margin: 0 auto;
+  padding: clamp(1.5rem, 4vw, 3.5rem) var(--edge) clamp(4rem, 10vw, 8rem);
+  background: var(--red-deep);
+  color: var(--paper);
+}
+
+/* The whole page sits on deep red, edge to edge. */
+.about::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: var(--red-deep);
+}
+
+/* Paper tooth over the ground — the references are all printed on stock. */
+.about::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.42;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'>\
+<filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4'/>\
+<feColorMatrix type='saturate' values='0'/></filter>\
+<rect width='200' height='200' filter='url(%23p)' opacity='0.55'/></svg>");
+}
+
+/* ---------------------------------------------------------------- hero -- */
+
+.about__hero {
+  display: grid;
+  gap: clamp(2.5rem, 6vw, 5rem);
+  margin-top: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+@media (min-width: 940px) {
+  .about__hero {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  }
+}
+
+/* Restored with the About page's own naming: these belonged to the old section
+   pages, which the galleries replaced. */
+.about__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: color-mix(in srgb, var(--paper) 72%, transparent);
+  font-size: clamp(0.6rem, 0.74vw, 0.72rem);
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  font-weight: 700;
+  transition: color 260ms var(--ease);
+}
+.about__back svg {
+  width: 1.4rem;
+  transition: transform 380ms var(--ease);
+}
+.about__back:hover {
+  color: var(--gold);
+}
+.about__back:hover svg {
+  transform: translateX(-0.3rem);
+}
+
+.about__kicker {
+  margin: 0 0 clamp(0.6rem, 1.4vw, 1rem);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.6rem, 0.74vw, 0.72rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.about__label {
+  margin: 0 0 clamp(0.7rem, 1.6vw, 1.1rem);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.62rem, 0.78vw, 0.74rem);
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.about__name {
+  margin: 0;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-weight: 400;
+  font-size: clamp(4rem, 15vw, 13rem);
+  line-height: 0.78;
+  letter-spacing: -0.03em;
+  color: var(--stock);
+  transform: skewX(var(--slant));
+  transform-origin: 0 100%;
+}
+
+.about__role {
+  margin: clamp(0.8rem, 2vw, 1.4rem) 0 0;
+  font-size: clamp(1rem, 1.5vw, 1.4rem);
+  font-weight: 700;
+}
+
+.about__current {
+  display: inline-block;
+  margin: clamp(0.6rem, 1.4vw, 0.9rem) 0 0;
+  padding: 0.5em 0.8em;
+  background: var(--stock);
+  color: var(--red-deep);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.6rem, 0.74vw, 0.7rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.about__facts {
+  display: grid;
+  gap: 0.6rem;
+  margin: clamp(1.4rem, 3vw, 2.2rem) 0 0;
+  padding-top: clamp(1rem, 2vw, 1.5rem);
+  border-top: 2px solid rgb(242 237 227 / 0.28);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.62rem, 0.78vw, 0.74rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.about__facts div {
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+.about__facts dt {
+  opacity: 0.62;
+}
+.about__facts dd {
+  margin: 0;
+  font-weight: 700;
+  text-align: right;
+}
+
+.about__signature {
+  display: block;
+  width: clamp(11rem, 20vw, 17rem);
+  margin-top: clamp(1.6rem, 3.5vw, 2.6rem);
+  color: var(--stock);
+  opacity: 0.92;
+  transform: rotate(-3deg);
+}
+
+/* ------------------------------------------------------------- collage -- */
+
+.about__collage {
+  position: relative;
+  display: grid;
+  /* Overlapping cells, so the prints stack the way they do on a desk. */
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: auto auto;
+  padding: clamp(1rem, 3vw, 2.5rem) 0;
+}
+
+/* One print: white stock, image inset, handwritten caption under it. */
+.snap {
+  position: relative;
+  margin: 0;
+  padding: 0.7rem 0.7rem 0;
+  background: var(--stock);
+  box-shadow: 0 1.6rem 3rem rgb(0 0 0 / 0.42), 0 0.2rem 0.5rem rgb(0 0 0 / 0.3);
+  transition: transform 520ms var(--ease), box-shadow 520ms var(--ease);
+}
+.snap--1 {
+  grid-area: 1 / 1 / 2 / 5;
+  z-index: 3;
+  transform: rotate(-2.2deg);
+}
+.snap--2 {
+  grid-area: 2 / 3 / 3 / 7;
+  z-index: 2;
+  margin-top: -18%;
+  transform: rotate(1.8deg);
+}
+.snap--3 {
+  grid-area: 2 / 1 / 3 / 3;
+  z-index: 1;
+  margin-top: 12%;
+  transform: rotate(-4deg);
+}
+.snap:hover {
+  z-index: 5;
+  transform: rotate(0deg) scale(1.02);
+  box-shadow: 0 2.2rem 4rem rgb(0 0 0 / 0.5);
+}
+
+.snap__frame {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 10 / 7;
+  background: var(--ink-2);
+}
+.snap--3 .snap__frame {
+  aspect-ratio: 4 / 5;
+}
+.snap__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+/* Grain, so the prints match the emulsion on the rest of the site. */
+.snap__frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='150' height='150'>\
+<filter id='s'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/>\
+<feColorMatrix type='saturate' values='0'/></filter>\
+<rect width='150' height='150' filter='url(%23s)' opacity='0.5'/></svg>");
+}
+
+.snap figcaption {
+  padding: 0.6rem 0.2rem 0.75rem;
+  color: #4a4038;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.54rem, 0.66vw, 0.64rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* A torn strip of tape across one corner of each print. */
+.snap__tape {
+  position: absolute;
+  top: -0.9rem;
+  left: 12%;
+  width: clamp(4rem, 9vw, 7rem);
+  height: 1.9rem;
+  background: color-mix(in srgb, var(--tape) 82%, transparent);
+  box-shadow: 0 0.15rem 0.4rem rgb(0 0 0 / 0.25);
+  transform: rotate(-5deg);
+  /* Ragged ends, as a hand-torn piece has. */
+  clip-path: polygon(
+    3% 12%, 12% 0%, 26% 14%, 41% 2%, 58% 15%, 74% 3%, 88% 16%, 100% 6%,
+    97% 88%, 84% 100%, 69% 86%, 54% 99%, 38% 85%, 23% 98%, 10% 84%, 0% 94%
+  );
+  opacity: 0.9;
+}
+.snap--2 .snap__tape {
+  left: auto;
+  right: 10%;
+  transform: rotate(6deg);
+}
+.snap--3 .snap__tape {
+  left: 30%;
+  transform: rotate(9deg);
+}
+
+/* ---------------------------------------------------------------- body -- */
+
+.about__body {
+  position: relative;
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 3rem);
+  margin-top: clamp(4rem, 10vw, 8rem);
+  align-items: start;
+}
+@media (min-width: 940px) {
+  .about__body {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  }
+}
+
+/* The big figure, overlapping the column the way the reference sets 50/0. */
+.about__figure {
+  grid-row: 1;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.02em;
+  font-family: var(--font-display), Impact, sans-serif;
+  font-size: clamp(7rem, 010vw + 4rem, 18rem);
+  line-height: 0.74;
+  letter-spacing: -0.04em;
+  color: var(--stock);
+  transform: skewX(var(--slant));
+  transform-origin: 0 100%;
+}
+.about__figure em {
+  font-style: normal;
+  color: var(--red);
+  -webkit-text-stroke: 2px var(--stock);
+  padding: 0 0.04em;
+}
+
+.about__figure-caption {
+  grid-row: 2;
+  margin: clamp(0.8rem, 2vw, 1.4rem) 0 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.62rem, 0.78vw, 0.74rem);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.about__prose {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: grid;
+  gap: 1.1rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.72rem, 0.9vw, 0.84rem);
+  line-height: 1.85;
+  /* Justified, as the reference column is. */
+  text-align: justify;
+  hyphens: auto;
+}
+.about__prose p {
+  margin: 0;
+}
+@media (max-width: 939px) {
+  .about__prose {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .about__figure-caption {
+    grid-row: auto;
+  }
+}
+
+/* ---------------------------------------------------------------- spec -- */
+
+.about__spec {
+  display: grid;
+  gap: clamp(2rem, 5vw, 4rem);
+  margin-top: clamp(4rem, 9vw, 7rem);
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  border-top: 2px solid rgb(242 237 227 / 0.28);
+}
+@media (min-width: 760px) {
+  .about__spec {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  }
+}
+
+.spec {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.64rem, 0.8vw, 0.76rem);
+}
+.spec div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 8rem) 1fr;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid rgb(242 237 227 / 0.18);
+}
+.spec dt {
+  opacity: 0.6;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.spec dd {
+  margin: 0;
+  font-weight: 700;
+}
+
+.clients {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Client names are the strongest thing on the page after the story, so they
+   get the paper ground rather than an outline. */
+.clients--named li {
+  background: var(--stock);
+  border-color: var(--stock);
+  color: var(--red-deep);
+}
+
+.about__cameras {
+  margin: clamp(1rem, 2.4vw, 1.6rem) 0 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.6rem, 0.74vw, 0.7rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.66;
+}
+
+.clients li {
+  padding: 0.55em 0.8em;
+  border: 1px solid rgb(242 237 227 / 0.3);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.6rem, 0.74vw, 0.7rem);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* ----------------------------------------------------------------- cta -- */
+
+.about__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: clamp(4rem, 9vw, 7rem);
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  border-top: 2px solid rgb(242 237 227 / 0.28);
+}
+.about__cta-line {
+  margin: 0;
+  font-family: var(--font-display), sans-serif;
+  font-size: clamp(1.8rem, 5vw, 3.6rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--stock);
+  transform: skewX(var(--slant));
+}
+/* On red, the button inverts: paper ground, red fill on hover. */
+.about .cta {
+  background: var(--stock);
+  color: var(--red-deep);
+}
+.about .cta::before {
+  background: var(--ink);
+}
+.about .cta:hover {
+  color: var(--stock);
+}
+
+/* --------------------------------------------------- ornament placement -- */
+
+.about__intro {
+  position: relative;
+}
+
+/*
+ * The sun sits behind the name, bled off the left edge of the column.
+ *
+ * z-index 0 rather than -1: a negative-index child paints *below* its
+ * ancestor's background, so at -1 the sun disappeared behind the red ground.
+ * The type is given `position: relative` instead, which puts it above by DOM
+ * order without either needing a z-index race.
+ */
+.about__sun {
+  position: absolute;
+  top: -14%;
+  left: -16%;
+  width: clamp(9rem, 20vw, 16rem);
+  color: var(--gold);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.about__label,
+.about__name,
+.about__role,
+.about__current,
+.about__facts,
+.about__signature {
+  position: relative;
+}
+
+.about__chevron {
+  width: min(100%, 22rem);
+  margin: clamp(1.2rem, 2.6vw, 2rem) 0 0;
+}
+.about__chevron--wide {
+  width: 100%;
+  margin-top: clamp(4rem, 9vw, 7rem);
+}
+
+/* The section pages get the same band under their masthead. */
+.work__rule {
+  margin: clamp(2rem, 4vw, 3rem) 0 0;
+}
+
+/* On red grounds the band is paper rather than gold, or it disappears. */
+.about .chevron {
+  background-image: url("data:image/svg+xml;utf8,\
+<svg xmlns='http://www.w3.org/2000/svg' width='26' height='12' viewBox='0 0 26 12'>\
+<path d='M0 10.5 L6.5 1.5 L13 10.5 L19.5 1.5 L26 10.5' fill='none' \
+stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
+}
+
+/* Gold picks out the ledger values on the About page. */
+.about__facts dd {
+  color: var(--gold);
+}
+.about__figure em {
+  color: var(--gold);
+  -webkit-text-stroke: 0;
+}
+
+/* ==========================================================================
+   Work galleries.
+   The quietest pages on the site: a hairline header, frames laid out by hand,
+   and three lines of caption. Nothing here should compete with a photograph.
+   ========================================================================== */
+
+.gallery {
+  --gutter: clamp(1rem, 3vw, 2.5rem);
+  max-width: 132rem;
+  margin: 0 auto;
+  padding: clamp(1rem, 2.4vw, 1.8rem) var(--gutter) clamp(5rem, 12vw, 10rem);
+}
+
+/* --------------------------------------------------------------- header -- */
+
+.gallery__head {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: clamp(2.5rem, 7vw, 6rem);
+}
+
+.gallery__head a,
+.gallery__title {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.gallery__title {
+  margin: 0;
+  text-align: center;
+  color: var(--paper);
+}
+
+.gallery__home {
+  justify-self: start;
+  color: var(--paper);
+}
+.gallery__aside {
+  justify-self: end;
+  color: var(--paper-dim);
+  transition: color 260ms var(--ease);
+}
+.gallery__home:hover,
+.gallery__aside:hover {
+  color: var(--red);
+}
+
+/* ----------------------------------------------------------------- grid -- */
+
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  /* Wide horizontal gutters, tight vertical ones: the drops do the spacing. */
+  column-gap: clamp(1.25rem, 3vw, 3.5rem);
+  row-gap: clamp(3rem, 8vw, 7rem);
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.shot {
+  grid-column: span var(--span);
+  /* Frames hang at different heights, so a row never reads as a grid. */
+  margin-top: var(--drop);
+}
+
+.shot figure {
+  margin: 0;
+}
+
+.shot__frame {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: var(--aspect, 3 / 4);
+  background: var(--ink-2);
+}
+.shot__frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 900ms var(--ease), opacity 500ms var(--ease);
+}
+.shot:hover .shot__frame img,
+.shot:focus-within .shot__frame img {
+  transform: scale(1.03);
+}
+
+/*
+ * A thin film border, the black edge of a 6×6 frame, with a hairline outside it
+ * so the frame separates from the ground. Kept deliberately slight: the point
+ * is a clean sharp picture, not a costume.
+ */
+.shot__frame {
+  border: 3px solid #0a0908;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--paper) 16%, transparent);
+}
+
+/* -------------------------------------------------------------- caption -- */
+
+.shot figcaption {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding-top: 0.9rem;
+  text-align: center;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.shot__title {
+  font-weight: 700;
+  color: var(--paper);
+}
+.shot__client {
+  color: var(--paper-dim);
+}
+.shot__agency {
+  color: var(--gold);
+}
+
+/* --------------------------------------------------------------- footer -- */
+
+.gallery__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  margin-top: clamp(6rem, 14vw, 12rem);
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  border-top: 1px solid var(--rule);
+}
+.gallery__foot a {
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: color 260ms var(--ease);
+}
+.gallery__foot a:hover {
+  color: var(--red);
+}
+
+/* ---------------------------------------------------------- responsive -- */
+
+@media (max-width: 900px) {
+  .gallery__grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  /* Halve the drops so the page doesn't turn into a long stagger. */
+  .shot {
+    margin-top: calc(var(--drop) * 0.4);
+  }
+}
+
+@media (max-width: 560px) {
+  .gallery__grid {
+    grid-template-columns: repeat(2, 1fr);
+    row-gap: clamp(2rem, 8vw, 3rem);
+  }
+  .shot {
+    grid-column: span 1;
+    margin-top: 0;
+  }
+}
+
+/* -------------------------------------------------------------- stamp -- */
+
+/*
+ * The rating-mark block from the album sleeve. Flat, hard-edged, and set in
+ * the mono face — it should look printed on rather than designed in.
+ */
+.stamp {
+  display: inline-grid;
+  justify-items: center;
+  gap: 0.12rem;
+  padding: 0.3rem 0.55rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.42rem, 0.52vw, 0.5rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  text-align: center;
+}
+/* The middle line is the loud one, knocked out in reverse. */
+.stamp__mid {
+  align-self: stretch;
+  width: 100%;
+  padding: 0.12rem 0.4rem;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+}
+.stamp__top,
+.stamp__bot {
+  opacity: 0.85;
+}
+
+/* ------------------------------------------------- marks in placement -- */
+
+.gallery__rule {
+  margin: 0 0 clamp(2.5rem, 6vw, 5rem);
+}
+/* The header's padding is now the rule's job, so it sits tight above it. */
+.gallery__head {
+  padding-bottom: clamp(1rem, 2.4vw, 1.8rem);
+}
+
+.gallery__foot-item {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(1.5rem, 5vw, 4rem);
+}
+/* The star separates rather than decorates, so it only appears between items. */
+.gallery__star {
+  width: 0.5rem;
+  color: var(--gold);
+  flex: none;
+}
+
+.gallery__stamp {
+  position: fixed;
+  right: var(--gutter, 1.5rem);
+  bottom: clamp(1rem, 2.4vw, 1.8rem);
+  z-index: 5;
+}
+
+.about__flag {
+  width: 100%;
+  margin-top: clamp(4rem, 9vw, 7rem);
+}
+
+.about__stamp {
+  margin-top: clamp(1.5rem, 3vw, 2.4rem);
+}
+
+@media (max-width: 720px) {
+  /* Fixed furniture is the first thing to go on a phone. */
+  .gallery__stamp {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Opening: four Zimbabwe Birds settling, then the curtain lifts.
+   ========================================================================== */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(1.25rem, 2.5vw, 2rem);
+  background: var(--ink);
+  /* The curtain lifts rather than fades — it should feel like a page turning,
+     which is what the whole site is about. */
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 850ms var(--ease), opacity 850ms var(--ease);
+}
+.intro.is-leaving {
+  clip-path: inset(0 0 100% 0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.intro__rig {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(1.5rem, 5vw, 4.5rem);
+}
+
+.intro__camera {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.7rem, 1.4vw, 1.1rem);
+  margin: 0;
+  /* Cameras get set down, not dropped — a short rise and no bounce. */
+  animation: rig-set 700ms var(--ease) both;
+}
+.intro__camera:nth-child(1) { animation-delay: 80ms; }
+.intro__camera:nth-child(2) { animation-delay: 320ms; }
+
+.intro__art {
+  width: clamp(4.5rem, 11vw, 8rem);
+  color: var(--red);
+}
+
+.intro__camera figcaption {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.48rem, 0.6vw, 0.58rem);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--paper-dim);
+  /* The name arrives after its camera has settled. */
+  animation: fade-in 500ms var(--ease) both;
+}
+.intro__camera:nth-child(1) figcaption { animation-delay: 620ms; }
+.intro__camera:nth-child(2) figcaption { animation-delay: 860ms; }
+
+@keyframes rig-set {
+  from {
+    opacity: 0;
+    transform: translateY(1.1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The bench they stand on: the flag band draws outward once both are down. */
+.intro__rule {
+  width: clamp(11rem, 28vw, 22rem);
+  transform: scaleX(0);
+  animation: perch 700ms var(--ease) 1000ms both;
+}
+
+@keyframes perch {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Everything arrives at once and simply fades; nothing moves. */
+  .intro__camera,
+  .intro__camera figcaption,
+  .intro__rule {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .intro {
+    transition: opacity 400ms linear;
+  }
+  .intro.is-leaving {
+    clip-path: none;
+  }
+}
