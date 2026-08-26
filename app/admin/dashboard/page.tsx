@@ -141,7 +141,7 @@ export default function AdminDashboard() {
     setFormData({
       title: '',
       description: '',
-      category: 'film',
+      category: 'directing',
       vimeo_url: '',
       image_url: '',
     });
