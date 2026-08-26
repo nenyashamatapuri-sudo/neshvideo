@@ -1,23 +1,24 @@
 'use server';
 
-import { supabase, PortfolioPiece } from '@/lib/supabase';
+import { supabase, type PortfolioCategory } from '@/lib/supabase';
+import { PortfolioPiece } from '@/lib/supabase';
 
-export async function getPortfolioPiecesByCategory(category: string): Promise<PortfolioPiece[]> {
-  const categoryMap: Record<string, 'film' | 'stills'> = {
-    directing: 'film',
-    videography: 'film',
-    photography: 'stills',
-    production: 'stills',
+export async function getPortfolioPiecesByCategory(slug: string): Promise<PortfolioPiece[]> {
+  const categoryMap: Record<string, PortfolioCategory> = {
+    directing: 'directing',
+    photography: 'photography',
+    videography: 'videography',
+    production: 'production',
   };
 
-  const dbCategory = categoryMap[category];
-  if (!dbCategory) return [];
+  const category = categoryMap[slug];
+  if (!category) return [];
 
   try {
     const { data, error } = await supabase
       .from('portfolio_pieces')
       .select('*')
-      .eq('category', dbCategory)
+      .eq('category', category)
       .order('created_at', { ascending: false });
 
     if (error) throw error;

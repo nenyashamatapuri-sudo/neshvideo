@@ -9,11 +9,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+export type PortfolioCategory = 'directing' | 'photography' | 'videography' | 'production';
+
 export interface PortfolioPiece {
   id: string;
   title: string;
   description: string;
-  category: 'film' | 'stills';
+  category: PortfolioCategory;
   vimeo_url?: string;
   image_url?: string;
   storage_path?: string;

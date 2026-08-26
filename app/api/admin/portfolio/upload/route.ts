@@ -11,23 +11,38 @@ export async function POST(request: NextRequest) {
     }
 
     const timestamp = Date.now();
-    const filename = `${timestamp}-${file.name}`;
+    const filename = `${timestamp}-${file.name.replace(/\s+/g, '-')}`;
     const path = `portfolio/${filename}`;
 
-    const buffer = await file.arrayBuffer();
-    const { error } = await supabase.storage
+    // Convert file to buffer
+    const bytes = await file.arrayBuffer();
+    const uint8Array = new Uint8Array(bytes);
+
+    // Upload to Supabase Storage
+    const { error, data } = await supabase.storage
       .from('portfolio')
-      .upload(path, buffer, {
+      .upload(path, uint8Array, {
         contentType: file.type,
+        cacheControl: '3600',
+        upsert: false,
       });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase upload error:', error);
+      throw new Error(`Upload failed: ${error.message}`);
+    }
 
-    const { data } = supabase.storage.from('portfolio').getPublicUrl(path);
+    // Get public URL
+    const { data: publicUrl } = supabase.storage
+      .from('portfolio')
+      .getPublicUrl(path);
 
-    return NextResponse.json({ url: data.publicUrl });
+    return NextResponse.json({ url: publicUrl.publicUrl }, { status: 200 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    console.error('Upload error:', err);
+    return NextResponse.json(
+      { error: `Upload failed: ${err instanceof Error ? err.message : 'Unknown error'}` },
+      { status: 500 }
+    );
   }
 }

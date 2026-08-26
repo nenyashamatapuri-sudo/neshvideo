@@ -47,7 +47,7 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
       id: p.cover,
       title: p.title,
       description: p.client,
-      category: slug === 'photography' || slug === 'production' ? 'stills' as const : 'film' as const,
+      category: slug as any,
       image_url: p.cover,
       vimeo_url: undefined,
       storage_path: undefined,

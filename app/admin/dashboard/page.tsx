@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PortfolioPiece } from '@/lib/supabase';
+import { PortfolioPiece, PortfolioCategory } from '@/lib/supabase';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'film' as 'film' | 'stills',
+    category: 'directing' as PortfolioCategory,
     vimeo_url: '',
     image_url: '',
   });
@@ -98,7 +98,7 @@ export default function AdminDashboard() {
       setFormData({
         title: '',
         description: '',
-        category: 'film',
+        category: 'directing',
         vimeo_url: '',
         image_url: '',
       });
@@ -288,7 +288,7 @@ export default function AdminDashboard() {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as 'film' | 'stills' })}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as PortfolioCategory })}
                     style={{
                       width: '100%',
                       padding: '0.75rem',
