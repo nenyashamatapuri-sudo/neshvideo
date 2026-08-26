@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { chapterBySlug, SECTIONS } from "@/lib/spreads";
 import { projectsFor } from "@/lib/projects";
 import { Stamp, Star } from "@/components/Ornament";
+import { getPortfolioPiecesByCategory } from "@/lib/portfolio-client";
 
 /** Every section is known at build time, so all four pages are static. */
 export function generateStaticParams() {
@@ -36,57 +37,100 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
   const chapter = chapterBySlug(slug);
   if (!chapter) notFound();
 
-  const projects = projectsFor(slug);
+  // Try to fetch from Supabase, fall back to hardcoded projects
+  let projects = await getPortfolioPiecesByCategory(slug);
+  
+  if (projects.length === 0) {
+    // Fallback to existing projects if Supabase is empty
+    const fallbackProjects = projectsFor(slug);
+    projects = fallbackProjects.map((p) => ({
+      id: p.cover,
+      title: p.title,
+      description: p.client,
+      category: slug === 'photography' || slug === 'production' ? 'stills' as const : 'film' as const,
+      image_url: p.cover,
+      vimeo_url: undefined,
+      storage_path: undefined,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }));
+  }
+
   const others = SECTIONS.filter((s) => s.slug !== slug);
 
   return (
-    <main className="gallery">
+    <main style={{
+      maxWidth: '1440px',
+      margin: '0 auto',
+      padding: 'clamp(1.5rem, 4vw, 3rem)',
+    }}>
       <header className="gallery__head">
-        <Link className="gallery__home" href="/">
-          Nesh
+        <Link href="/" style={{ textDecoration: 'none' }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.7rem',
+            color: '#948b86',
+            fontSize: 'clamp(0.6rem, 0.74vw, 0.72rem)',
+            letterSpacing: '0.17em',
+            textTransform: 'uppercase',
+            fontWeight: '700',
+            transition: 'color 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+          }}>
+            ← Nesh
+          </span>
         </Link>
-        <h1 className="gallery__title">
+        <span style={{
+          color: '#f2ede3',
+          fontSize: 'clamp(1rem, 2.2vw, 1.5rem)',
+          fontWeight: '700',
+          letterSpacing: '-0.02em',
+        }}>
           {chapter.title}
           {chapter.tail}
-        </h1>
-        <Link className="gallery__aside" href="/about">
-          About
+        </span>
+        <Link href="/about" style={{ textDecoration: 'none' }}>
+          <span style={{
+            color: '#948b86',
+            fontSize: 'clamp(0.6rem, 0.74vw, 0.72rem)',
+            letterSpacing: '0.17em',
+            textTransform: 'uppercase',
+            fontWeight: '700',
+            transition: 'color 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+          }}>
+            About
+          </span>
         </Link>
       </header>
 
-      {/* The palette on one line, between the header and the work. */}
       <div className="flag-rule gallery__rule" aria-hidden="true" />
 
       <ul className="gallery__grid">
-        {projects.map((p, i) => (
-          <li
-            key={p.slug}
-            className="shot"
-            style={
-              {
-                "--span": p.span,
-                "--drop": p.drop,
-                "--aspect": p.aspect,
-              } as React.CSSProperties
-            }
-          >
-            <figure>
-              <span className="shot__frame">
+        {projects.map((project) => (
+          <li key={project.id} className="shot">
+            {project.image_url && (
+              <figure className="shot__frame">
                 <Image
-                  src={p.cover}
-                  alt={`${p.title} — ${p.client}`}
-                  width={1000}
-                  height={700}
-                  sizes="(max-width: 720px) 50vw, 25vw"
-                  priority={i < 3}
+                  src={project.image_url}
+                  alt={project.title}
+                  width={400}
+                  height={300}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover',
+                    display: 'block',
+                  }}
                 />
-              </span>
-              <figcaption>
-                <span className="shot__title">{p.title}</span>
-                <span className="shot__client">{p.client}</span>
-                {p.agency ? <span className="shot__agency">{p.agency}</span> : null}
-              </figcaption>
-            </figure>
+              </figure>
+            )}
+            <figcaption>
+              <span className="shot__title">{project.title}</span>
+              <span className="shot__client">{project.description}</span>
+              {project.vimeo_url && (
+                <span className="shot__agency">Film</span>
+              )}
+            </figcaption>
           </li>
         ))}
       </ul>
@@ -95,7 +139,7 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
         {others.map((s, i) => (
           <span className="gallery__foot-item" key={s.slug}>
             {i > 0 ? <Star className="gallery__star" /> : null}
-            <Link href={s.href}>
+            <Link href={`/work/${s.slug}`}>
               {s.title}
               {s.tail}
             </Link>
