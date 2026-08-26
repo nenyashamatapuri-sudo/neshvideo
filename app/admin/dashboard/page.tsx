@@ -8,6 +8,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [pieces, setPieces] = useState<PortfolioPiece[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -32,11 +33,15 @@ export default function AdminDashboard() {
   const fetchPieces = async () => {
     try {
       const response = await fetch('/api/admin/portfolio');
+      if (!response.ok) throw new Error('Failed to fetch');
       const data = await response.json();
-      setPieces(data);
+      setPieces(Array.isArray(data) ? data : []);
+      setError('');
       setLoading(false);
     } catch (err) {
-      console.error(err);
+      console.error('Fetch error:', err);
+      setError('Failed to load portfolio pieces');
+      setPieces([]);
       setLoading(false);
     }
   };
@@ -62,10 +67,12 @@ export default function AdminDashboard() {
           body: uploadFormData,
         });
 
+        if (!uploadResponse.ok) throw new Error('Upload failed');
         const uploadData = await uploadResponse.json();
         imageUrl = uploadData.url;
       } catch (err) {
         console.error('Upload error:', err);
+        setError('Image upload failed');
         return;
       }
     }
@@ -83,21 +90,23 @@ export default function AdminDashboard() {
         }),
       });
 
-      if (response.ok) {
-        fetchPieces();
-        setShowForm(false);
-        setEditingId(null);
-        setFormData({
-          title: '',
-          description: '',
-          category: 'film',
-          vimeo_url: '',
-          image_url: '',
-        });
-        setFile(null);
-      }
+      if (!response.ok) throw new Error('Save failed');
+      
+      fetchPieces();
+      setShowForm(false);
+      setEditingId(null);
+      setFormData({
+        title: '',
+        description: '',
+        category: 'film',
+        vimeo_url: '',
+        image_url: '',
+      });
+      setFile(null);
+      setError('');
     } catch (err) {
-      console.error(err);
+      console.error('Save error:', err);
+      setError('Failed to save piece');
     }
   };
 
@@ -117,10 +126,12 @@ export default function AdminDashboard() {
     if (!confirm('Delete this piece?')) return;
 
     try {
-      await fetch(`/api/admin/portfolio/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/admin/portfolio/${id}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Delete failed');
       fetchPieces();
     } catch (err) {
-      console.error(err);
+      console.error('Delete error:', err);
+      setError('Failed to delete piece');
     }
   };
 
@@ -195,6 +206,20 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            backgroundColor: 'rgba(227, 37, 27, 0.1)',
+            border: '1px solid #e3251b',
+            color: '#e3251b',
+            padding: '1rem',
+            borderRadius: '4px',
+            marginBottom: '2rem',
+          }}>
+            {error}
+          </div>
+        )}
+
         {/* Form */}
         {showForm && (
           <div style={{
@@ -207,7 +232,6 @@ export default function AdminDashboard() {
             <h2 style={{
               fontSize: '20px',
               fontWeight: '700',
-              marginBottom: '1.5rem',
               margin: '0 0 1.5rem',
             }}>
               {editingId ? 'Edit Piece' : 'Add New Piece'}
@@ -443,6 +467,17 @@ export default function AdminDashboard() {
         {/* List */}
         {loading ? (
           <p style={{ textAlign: 'center', color: '#948b86' }}>Loading...</p>
+        ) : pieces.length === 0 ? (
+          <div style={{
+            textAlign: 'center',
+            padding: '3rem',
+            color: '#948b86',
+            backgroundColor: '#1a1818',
+            border: '1px solid #333',
+            borderRadius: '8px',
+          }}>
+            <p>No portfolio pieces yet. Click "Add Piece" to get started!</p>
+          </div>
         ) : (
           <div style={{
             display: 'grid',
