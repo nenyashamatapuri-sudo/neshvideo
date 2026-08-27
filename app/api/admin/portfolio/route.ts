@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(data, { status: 201 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Failed to create piece' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('Portfolio create error:', errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

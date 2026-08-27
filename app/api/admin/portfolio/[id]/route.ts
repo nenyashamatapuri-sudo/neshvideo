@@ -32,8 +32,9 @@ export async function PUT(
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Failed to update piece' }, { status: 500 });
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('Portfolio update error:', errorMessage);
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
 
