@@ -300,8 +300,10 @@ export default function AdminDashboard() {
                       boxSizing: 'border-box',
                     }}
                   >
-                    <option value="film">Film</option>
-                    <option value="stills">Stills</option>
+                    <option value="directing">Directing</option>
+                    <option value="photography">Photography</option>
+                    <option value="videography">Videography</option>
+                    <option value="production">Production</option>
                   </select>
                 </div>
               </div>
