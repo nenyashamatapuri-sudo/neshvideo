@@ -21,9 +21,18 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
+    // Convert empty strings to null for optional fields
+    const cleanedBody = {
+      ...body,
+      description: body.description || null,
+      vimeo_url: body.vimeo_url || null,
+      image_url: body.image_url || null,
+      storage_path: body.storage_path || null,
+    };
+
     const { data, error } = await supabase
       .from('portfolio_pieces')
-      .insert([body])
+      .insert([cleanedBody])
       .select()
       .single();
 
