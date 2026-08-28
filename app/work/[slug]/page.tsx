@@ -4,9 +4,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { chapterBySlug, SECTIONS } from "@/lib/spreads";
-import { projectsFor } from "@/lib/projects";
 import { Stamp, Star } from "@/components/Ornament";
 import { getPortfolioPiecesByCategory } from "@/lib/portfolio-client";
+import { RHYTHM } from "@/lib/rhythm";
+import { vimeoId } from "@/lib/supabase";
 
 /** Revalidate every 60 seconds to pick up new portfolio pieces */
 export const revalidate = 60;
@@ -40,103 +41,92 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
   const chapter = chapterBySlug(slug);
   if (!chapter) notFound();
 
-  // Try to fetch from Supabase, fall back to hardcoded projects
-  let projects = await getPortfolioPiecesByCategory(slug);
-  
-  if (projects.length === 0) {
-    // Fallback to existing projects if Supabase is empty
-    const fallbackProjects = projectsFor(slug);
-    projects = fallbackProjects.map((p) => ({
-      id: p.cover,
-      title: p.title,
-      description: p.client,
-      category: slug as any,
-      image_url: p.cover,
-      vimeo_url: undefined,
-      storage_path: undefined,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }));
-  }
-
+  const pieces = await getPortfolioPiecesByCategory(slug);
   const others = SECTIONS.filter((s) => s.slug !== slug);
 
   return (
-    <main style={{
-      maxWidth: '1440px',
-      margin: '0 auto',
-      padding: 'clamp(1.5rem, 4vw, 3rem)',
-    }}>
+    <main className="gallery">
       <header className="gallery__head">
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.7rem',
-            color: '#948b86',
-            fontSize: 'clamp(0.6rem, 0.74vw, 0.72rem)',
-            letterSpacing: '0.17em',
-            textTransform: 'uppercase',
-            fontWeight: '700',
-            transition: 'color 260ms cubic-bezier(0.16, 1, 0.3, 1)',
-          }}>
-            ← Nesh
-          </span>
+        <Link href="/" className="gallery__home">
+          ← Nesh
         </Link>
-        <span style={{
-          color: '#f2ede3',
-          fontSize: 'clamp(1rem, 2.2vw, 1.5rem)',
-          fontWeight: '700',
-          letterSpacing: '-0.02em',
-        }}>
+        <h1 className="gallery__title">
           {chapter.title}
           {chapter.tail}
-        </span>
-        <Link href="/about" style={{ textDecoration: 'none' }}>
-          <span style={{
-            color: '#948b86',
-            fontSize: 'clamp(0.6rem, 0.74vw, 0.72rem)',
-            letterSpacing: '0.17em',
-            textTransform: 'uppercase',
-            fontWeight: '700',
-            transition: 'color 260ms cubic-bezier(0.16, 1, 0.3, 1)',
-          }}>
-            About
-          </span>
+        </h1>
+        <Link href="/about" className="gallery__aside">
+          About
         </Link>
       </header>
 
       <div className="flag-rule gallery__rule" aria-hidden="true" />
 
-      <ul className="gallery__grid">
-        {projects.map((project) => (
-          <li key={project.id} className="shot">
-            {project.image_url && (
+      {pieces.length === 0 ? (
+        <p className="gallery__empty">This section is being hung. Check back shortly.</p>
+      ) : (
+        <ul className="gallery__grid">
+          {pieces.map((piece, i) => {
+            // The layout rhythm is the site's, not the database's: frames vary
+            // in width and hang at different heights so a row never reads as a
+            // grid. Without these the tiles collapse to one column each.
+            const beat = RHYTHM[i % RHYTHM.length];
+            const style = {
+              "--span": beat.span,
+              "--drop": beat.drop,
+              "--aspect": beat.aspect,
+            } as React.CSSProperties;
+
+            const caption = (
+              <figcaption>
+                <span className="shot__title">{piece.title}</span>
+                {piece.client && <span className="shot__client">{piece.client}</span>}
+                {piece.agency && <span className="shot__agency">{piece.agency}</span>}
+              </figcaption>
+            );
+
+            const frame = (
               <figure className="shot__frame">
-                <Image
-                  src={project.image_url}
-                  alt={project.title}
-                  width={400}
-                  height={300}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    display: 'block',
-                  }}
-                />
+                {piece.image_url ? (
+                  <Image
+                    src={piece.image_url}
+                    alt={piece.title}
+                    fill
+                    sizes="(max-width: 560px) 50vw, (max-width: 900px) 33vw, 25vw"
+                    style={{ objectFit: "cover" }}
+                  />
+                ) : (
+                  <span className="shot__blank" aria-hidden="true" />
+                )}
+                {vimeoId(piece.vimeo_url) && (
+                  <span className="shot__play" aria-hidden="true" />
+                )}
               </figure>
-            )}
-            <figcaption>
-              <span className="shot__title">{project.title}</span>
-              <span className="shot__client">{project.description}</span>
-              {project.vimeo_url && (
-                <span className="shot__agency">Film</span>
-              )}
-            </figcaption>
-          </li>
-        ))}
-      </ul>
+            );
+
+            // A piece with nothing behind it yet is announced, not linked.
+            if (piece.coming_soon) {
+              return (
+                <li className="shot shot--soon" key={piece.id} style={style}>
+                  {frame}
+                  <figcaption>
+                    <span className="shot__title">{piece.title}</span>
+                    <span className="shot__client">Coming soon</span>
+                  </figcaption>
+                </li>
+              );
+            }
+
+            return (
+              <li className="shot" key={piece.id} style={style}>
+                <Link href={`/work/${slug}/${piece.slug}`} className="shot__link">
+                  {frame}
+                  {caption}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
 
       <nav className="gallery__foot" aria-label="Other sections">
         {others.map((s, i) => (

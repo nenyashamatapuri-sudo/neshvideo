@@ -21,6 +21,23 @@ function cdnHostname(): string | null {
 
 const host = cdnHostname();
 
+/**
+ * Supabase Storage serves the CMS-uploaded stills. next/image refuses any
+ * remote host it has not been told about, so the project's own storage bucket
+ * has to be named here alongside the CDN.
+ */
+function supabaseHostname(): string | null {
+  const base = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").trim();
+  if (!base) return null;
+  try {
+    return new URL(base).hostname;
+  } catch {
+    return null;
+  }
+}
+
+const supabaseHost = supabaseHostname();
+
 const nextConfig: NextConfig = {
   turbopack: {
     // There is a stray package-lock.json in the home directory. Without this,
@@ -30,11 +47,24 @@ const nextConfig: NextConfig = {
   },
 
   images: {
-    // next/image refuses remote hosts unless they are named here. Only the one
-    // host, and only over https.
-    remotePatterns: host
-      ? [{ protocol: "https", hostname: host, pathname: "/media/**" }]
-      : [],
+    // next/image refuses remote hosts unless they are named here. Only these
+    // hosts, and only over https.
+    remotePatterns: [
+      ...(host
+        ? [{ protocol: "https" as const, hostname: host, pathname: "/media/**" }]
+        : []),
+      ...(supabaseHost
+        ? [
+            {
+              protocol: "https" as const,
+              hostname: supabaseHost,
+              pathname: "/storage/v1/object/public/**",
+            },
+          ]
+        : []),
+      // Vimeo's poster frames, fetched by the seeder for video-only pieces.
+      { protocol: "https" as const, hostname: "i.vimeocdn.com" },
+    ],
   },
 };
 

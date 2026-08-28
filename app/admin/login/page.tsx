@@ -33,7 +33,7 @@ export default function AdminLogin() {
       // Set auth cookie and redirect
       document.cookie = `admin_token=${data.token}; path=/; max-age=86400`;
       router.push('/admin/dashboard');
-    } catch (err) {
+    } catch {
       setError('An error occurred');
       setLoading(false);
     }

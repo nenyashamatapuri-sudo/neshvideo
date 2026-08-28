@@ -1676,3 +1676,366 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
     clip-path: none;
   }
 }
+
+/* ==========================================================================
+   A PIECE OF WORK
+   The section page's tile links, and the page one tile opens into.
+   ========================================================================== */
+
+/* The whole tile is the target, but the caption must not pick up link colour. */
+.shot__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* A frame still waiting on its photograph. */
+.shot__blank {
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0 8px,
+      color-mix(in srgb, var(--paper) 5%, transparent) 8px 16px
+    );
+}
+
+/* Announced, not yet published: the frame is inert and reads as held back. */
+.shot--soon .shot__frame {
+  opacity: 0.4;
+}
+.shot--soon .shot__title {
+  color: var(--paper-dim);
+}
+.shot--soon .shot__client {
+  color: var(--gold);
+}
+
+/* A small mark on any tile that opens into film. */
+.shot__play {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 70%, transparent);
+  backdrop-filter: blur(3px);
+  border: 1px solid color-mix(in srgb, var(--paper) 45%, transparent);
+}
+.shot__play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 54%;
+  transform: translate(-50%, -50%);
+  border-left: 0.42rem solid var(--paper);
+  border-top: 0.28rem solid transparent;
+  border-bottom: 0.28rem solid transparent;
+}
+
+.gallery__empty {
+  padding: clamp(4rem, 12vw, 9rem) 0;
+  text-align: center;
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------ the piece -- */
+
+.piece {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: clamp(1rem, 2.4vw, 1.8rem) var(--gutter) clamp(5rem, 12vw, 10rem);
+}
+
+/* ----------------------------------------------------------------- film -- */
+
+.piece__film {
+  max-width: 1100px;
+  margin: clamp(2rem, 6vw, 4rem) auto 0;
+}
+
+.piece__poster,
+.piece__player {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 3px solid #0a0908;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--paper) 16%, transparent);
+  background: var(--ink-2);
+}
+
+.piece__poster {
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+.piece__poster img {
+  transition: transform 900ms var(--ease), opacity 500ms var(--ease);
+}
+.piece__poster:hover img {
+  transform: scale(1.03);
+  opacity: 0.75;
+}
+
+.piece__player {
+  border: 3px solid #0a0908;
+}
+
+/* The one piece of chrome on the page, so it is allowed to be the red. */
+.piece__play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(3.5rem, 7vw, 5rem);
+  height: clamp(3.5rem, 7vw, 5rem);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--red) 92%, transparent);
+  transition: transform 400ms var(--ease), background 400ms var(--ease);
+}
+.piece__poster:hover .piece__play {
+  transform: translate(-50%, -50%) scale(1.08);
+}
+.piece__play::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 56%;
+  transform: translate(-50%, -50%);
+  border-left: clamp(1rem, 2vw, 1.4rem) solid var(--paper);
+  border-top: clamp(0.62rem, 1.25vw, 0.88rem) solid transparent;
+  border-bottom: clamp(0.62rem, 1.25vw, 0.88rem) solid transparent;
+}
+
+/* --------------------------------------------------------------- plates -- */
+
+.piece__plates {
+  display: grid;
+  gap: clamp(2rem, 6vw, 4.5rem);
+  max-width: 1100px;
+  margin: clamp(2rem, 6vw, 4rem) auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.piece__plate-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 3px solid #0a0908;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--paper) 16%, transparent);
+  background: var(--ink-2);
+  cursor: zoom-in;
+  overflow: hidden;
+}
+.piece__plate-btn img {
+  display: block;
+  transition: opacity 500ms var(--ease);
+}
+.piece__plate-btn:hover img {
+  opacity: 0.82;
+}
+
+.piece__caption {
+  margin: 0.75rem 0 0;
+  text-align: center;
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------- credits -- */
+
+.piece__credits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: clamp(1.5rem, 5vw, 4rem);
+  max-width: 1100px;
+  margin: clamp(3rem, 9vw, 6rem) auto 0;
+  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  border-top: 1px solid var(--rule);
+}
+
+.piece__meta {
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.piece__meta-row {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 1rem;
+  padding: 0.42rem 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--paper) 8%, transparent);
+}
+.piece__meta dt {
+  color: var(--paper-dim);
+}
+.piece__meta dd {
+  margin: 0;
+  color: var(--paper);
+  font-weight: 700;
+}
+
+.piece__blurb {
+  margin: 0;
+  color: color-mix(in srgb, var(--paper) 78%, transparent);
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  line-height: 1.65;
+  max-width: 46ch;
+}
+
+/* ----------------------------------------------------------------- walk -- */
+
+.piece__walk {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: clamp(3rem, 8vw, 5rem) auto 0;
+}
+.piece__walk a {
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: color 260ms var(--ease);
+}
+.piece__walk a:hover {
+  color: var(--red);
+}
+
+@media (max-width: 760px) {
+  .piece__credits {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------------------------------------- lightbox -- */
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  padding: clamp(1rem, 4vw, 3rem);
+  background: color-mix(in srgb, #0a0908 94%, transparent);
+  backdrop-filter: blur(8px);
+  animation: lightbox-in 260ms var(--ease);
+  cursor: zoom-out;
+}
+
+@keyframes lightbox-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lightbox__figure {
+  grid-column: 2;
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  margin: 0;
+  cursor: default;
+}
+.lightbox__figure img {
+  object-fit: contain;
+}
+
+.lightbox__caption {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.lightbox__count {
+  color: var(--gold);
+}
+
+.lightbox__prev,
+.lightbox__next,
+.lightbox__close {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  padding: 0;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--paper);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 260ms var(--ease), color 260ms var(--ease);
+}
+.lightbox__prev:hover,
+.lightbox__next:hover,
+.lightbox__close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+.lightbox__prev {
+  grid-column: 1;
+}
+.lightbox__next {
+  grid-column: 3;
+}
+.lightbox__close {
+  position: absolute;
+  top: clamp(1rem, 3vw, 2rem);
+  right: clamp(1rem, 3vw, 2rem);
+}
+
+@media (max-width: 560px) {
+  .lightbox {
+    grid-template-columns: 1fr;
+  }
+  .lightbox__figure {
+    grid-column: 1;
+  }
+  .lightbox__prev,
+  .lightbox__next {
+    position: absolute;
+    bottom: clamp(1rem, 4vw, 2rem);
+  }
+  .lightbox__prev {
+    left: clamp(1rem, 4vw, 2rem);
+  }
+  .lightbox__next {
+    right: clamp(1rem, 4vw, 2rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox {
+    animation: none;
+  }
+  .piece__poster:hover img,
+  .piece__poster:hover .piece__play,
+  .shot:hover .shot__frame img {
+    transform: none;
+  }
+}

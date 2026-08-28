@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { clean } from '../route';
 
 export async function PUT(
   request: NextRequest,
@@ -8,22 +9,15 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+    const row = clean(body);
 
-    // Convert empty strings to null for optional fields
-    const cleanedBody = {
-      ...body,
-      description: body.description || null,
-      vimeo_url: body.vimeo_url || null,
-      image_url: body.image_url || null,
-      storage_path: body.storage_path || null,
-    };
+    if (!row.title) {
+      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    }
 
     const { data, error } = await supabase
       .from('portfolio_pieces')
-      .update({
-        ...cleanedBody,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ ...row, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
@@ -32,9 +26,9 @@ export async function PUT(
 
     return NextResponse.json(data);
   } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.error('Portfolio update error:', errorMessage);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Portfolio update error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -45,16 +39,36 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const { error } = await supabase
+    // Take the stored objects with the row, so deleting a piece does not leave
+    // its stills orphaned in the bucket.
+    const { data: piece } = await supabase
       .from('portfolio_pieces')
-      .delete()
-      .eq('id', id);
+      .select('storage_path, images')
+      .eq('id', id)
+      .maybeSingle();
 
+    const paths: string[] = [
+      ...(piece?.storage_path ? [piece.storage_path] : []),
+      ...(Array.isArray(piece?.images)
+        ? piece.images
+            .map((i: { storage_path?: string }) => i?.storage_path)
+            .filter((p: string | undefined): p is string => Boolean(p))
+        : []),
+    ];
+
+    if (paths.length) {
+      const { error: storageError } = await supabase.storage.from('portfolio').remove(paths);
+      // A missing object should not block deleting the row it belonged to.
+      if (storageError) console.error('Storage cleanup failed:', storageError.message);
+    }
+
+    const { error } = await supabase.from('portfolio_pieces').delete().eq('id', id);
     if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Failed to delete piece' }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Portfolio delete error:', message);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
