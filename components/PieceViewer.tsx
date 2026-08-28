@@ -103,7 +103,7 @@ export default function PieceViewer({ piece }: { piece: PortfolioPiece }) {
               >
                 <Image
                   src={still.url}
-                  alt={still.caption ?? `${piece.title} — ${i + 1}`}
+                  alt={still.caption || `${piece.title} — ${i + 1}`}
                   width={1600}
                   height={1200}
                   sizes="(max-width: 900px) 100vw, 1100px"
@@ -151,14 +151,16 @@ export default function PieceViewer({ piece }: { piece: PortfolioPiece }) {
           <figure className="lightbox__figure" onClick={(e) => e.stopPropagation()}>
             <Image
               src={stills[open].url}
-              alt={stills[open].caption ?? `${piece.title} — ${open + 1}`}
+              alt={stills[open].caption || `${piece.title} — ${open + 1}`}
               width={2000}
               height={1500}
               sizes="90vw"
               style={{ width: "auto", height: "auto", maxWidth: "90vw", maxHeight: "82vh" }}
             />
             <figcaption className="lightbox__caption">
-              {stills[open].caption ?? piece.title}
+              {/* Captions are optional and arrive as "" from the CMS, so the
+                  title has to cover the empty string as well as the absence. */}
+              {stills[open].caption || piece.title}
               <span className="lightbox__count">
                 {open + 1} / {stills.length}
               </span>
