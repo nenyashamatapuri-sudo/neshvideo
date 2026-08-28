@@ -136,6 +136,40 @@ async function vimeoPoster(link) {
   }
 }
 
+/**
+ * A poster frame lifted out of a video file.
+ *
+ * Built on first use from scripts/poster.swift, which samples across the
+ * running time and keeps the best-exposed frame — a first frame is usually
+ * black or mid-fade. Once a piece is up on Vimeo its own thumbnail takes over.
+ */
+let posterBin = null;
+function posterTool(workdir) {
+  if (posterBin !== null) return posterBin;
+  const out = join(workdir, 'poster');
+  try {
+    execFileSync('swiftc', ['-O', join(import.meta.dirname, 'poster.swift'), '-o', out], {
+      stdio: 'pipe',
+    });
+    posterBin = out;
+  } catch {
+    posterBin = false;
+  }
+  return posterBin;
+}
+
+function posterFrom(video, workdir) {
+  const tool = posterTool(workdir);
+  if (!tool) return null;
+  const png = join(workdir, `poster-${slugify(basename(video, extname(video)))}.png`);
+  try {
+    execFileSync(tool, [video, png], { stdio: 'pipe' });
+    return toJpeg(png, workdir);
+  } catch {
+    return null;
+  }
+}
+
 /** Normalise anything to a sensibly-sized JPEG via macOS's sips. */
 function toJpeg(src, workdir) {
   const out = join(workdir, `${slugify(basename(src, extname(src)))}.jpg`);
@@ -170,7 +204,7 @@ async function main() {
 
   const work = MANIFEST.filter((m) => !only || m.category === only);
   const workdir = mkdtempSync(join(tmpdir(), 'nesh-seed-'));
-  const counts = { rows: 0, images: 0, vimeo: 0, skipped: [] };
+  const counts = { rows: 0, images: 0, posters: 0, vimeo: 0, skipped: [] };
 
   console.log(`${dry ? 'DRY RUN — ' : ''}seeding ${work.length} pieces\n`);
 
@@ -221,7 +255,21 @@ async function main() {
         }
       }
 
-      // A film with no stills still needs a face on the section page.
+      // A film with no stills still needs a face on the section page. A frame
+      // chosen out of the footage beats Vimeo's own pick, which is whatever
+      // sat at the halfway mark; Vimeo is the fallback.
+      if (!thumbnail && videos.length) {
+        const frame = posterFrom(videos[0], workdir);
+        if (frame) {
+          try {
+            thumbnail = await upload(frame, item.category, slug, 0);
+            counts.posters++;
+          } catch {
+            /* fall through to Vimeo */
+          }
+        }
+      }
+
       if (!thumbnail && link) {
         const poster = await vimeoPoster(link);
         if (poster) thumbnail = { url: poster, storage_path: null };
@@ -275,7 +323,7 @@ async function main() {
 
   rmSync(workdir, { recursive: true, force: true });
 
-  console.log(`\n${counts.rows} rows, ${counts.images} images uploaded, ${counts.vimeo} Vimeo links found`);
+  console.log(`\n${counts.rows} rows, ${counts.images} stills + ${counts.posters} video posters uploaded, ${counts.vimeo} Vimeo links found`);
   if (counts.skipped.length) {
     console.log('\nNeeds attention:');
     counts.skipped.forEach((s) => console.log(`  · ${s}`));
