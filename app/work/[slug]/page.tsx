@@ -8,6 +8,9 @@ import { projectsFor } from "@/lib/projects";
 import { Stamp, Star } from "@/components/Ornament";
 import { getPortfolioPiecesByCategory } from "@/lib/portfolio-client";
 
+/** Revalidate every 60 seconds to pick up new portfolio pieces */
+export const revalidate = 60;
+
 /** Every section is known at build time, so all four pages are static. */
 export function generateStaticParams() {
   return SECTIONS.map((s) => ({ slug: s.slug }));
