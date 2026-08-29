@@ -39,6 +39,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# netlify — `netlify link` writes the site id here; it is local state, not
+# something the repo should carry.
+.netlify
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
