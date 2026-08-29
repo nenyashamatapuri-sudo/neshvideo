@@ -295,14 +295,22 @@ export function drawPage(
 
     // The name sits over the top of the picture, which is what gives the cover
     // its depth — type in front, portrait behind, one ground under both.
+    //
+    // Where it sits is the whole job. Centred vertically it lands across the
+    // face, and a cover that crops its subject out with its own headline is a
+    // worse cover than one with no picture at all. Dropped to here the words
+    // run over the shirt and the floor, which carry no detail worth keeping,
+    // and the face stays clear above them.
+    const nameTop = ART_H * 0.585;
+
     ctx.save();
     ctx.shadowColor = "rgba(0,0,0,0.45)";
     ctx.shadowBlur = 26;
     ctx.shadowOffsetY = 6;
     ctx.fillStyle = PAPER.stock;
     setType(ctx, 152, 900, false, -4);
-    ctx.fillText("NESH", left, ART_H * 0.5);
-    ctx.fillText("VIDEO", left, ART_H * 0.5 + 142);
+    ctx.fillText("NESH", left, nameTop);
+    ctx.fillText("VIDEO", left, nameTop + 142);
     ctx.restore();
 
     // Knocked back so the second word reads as a shadow of the first.
@@ -310,14 +318,14 @@ export function drawPage(
     ctx.globalCompositeOperation = "overlay";
     ctx.fillStyle = "rgba(227,37,27,0.9)";
     setType(ctx, 152, 900, false, -4);
-    ctx.fillText("VIDEO", left, ART_H * 0.5 + 142);
+    ctx.fillText("VIDEO", left, nameTop + 142);
     ctx.restore();
 
-    rule(ctx, left, ART_H * 0.5 + 186, width * 0.42, 4, PAPER.gold);
+    rule(ctx, left, nameTop + 186, width * 0.42, 4, PAPER.gold);
 
     ctx.fillStyle = "rgba(242,237,227,0.95)";
     setType(ctx, 29, 600);
-    paragraph(ctx, spec.intro, left, ART_H * 0.5 + 248, width * 0.8, 40);
+    paragraph(ctx, spec.intro, left, nameTop + 248, width * 0.8, 40);
   } else if (spec.kind === "poster") {
     if (shots[0]) {
       const ph = ART_H * 0.52;
