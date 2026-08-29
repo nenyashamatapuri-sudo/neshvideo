@@ -54,6 +54,9 @@ export function BinderCanvas({
         dpr={[1, 2]}
         gl={{
           antialias: true,
+          // Transparent, so the backdrop behind the canvas is the ground the
+          // binder stands on rather than a flat colour painted by the scene.
+          alpha: true,
           toneMapping: THREE.ACESFilmicToneMapping,
           // Paper stock is near-white; without pulling exposure down it blows
           // out and the printed detail disappears.
@@ -61,8 +64,8 @@ export function BinderCanvas({
         }}
         camera={{ fov: 32, position: [0, 0.06, 3.05], near: 0.1, far: 40 }}
       >
-        <color attach="background" args={["#0d0708"]} />
         <StudioEnvironment intensity={0.3} />
+        {/* Fog still fades the far edge of the book into the wall's colour. */}
         <fog attach="fog" args={["#0d0708", 3.6, 8]} />
 
         {/* Key light, high and camera-left, as if a softbox were on a stand. */}

@@ -2,6 +2,7 @@
 
 import { SPREAD_COUNT } from "@/lib/spreads";
 import { jumpToSpread } from "@/lib/scroll";
+import { play } from "@/lib/audio";
 import { useActiveSpread } from "./useActiveSpread";
 
 /**
@@ -24,7 +25,10 @@ export function ScrollHint() {
     <button
       type="button"
       className={`hint${gone ? " is-gone" : ""}`}
-      onClick={() => jumpToSpread(Math.min(active + 1, last))}
+      onClick={() => {
+        play("tick");
+        jumpToSpread(Math.min(active + 1, last));
+      }}
       tabIndex={gone ? -1 : 0}
       aria-hidden={gone}
     >
