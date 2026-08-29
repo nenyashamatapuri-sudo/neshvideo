@@ -6,10 +6,9 @@ import { useRouter } from "next/navigation";
 
 import { SECTIONS, SPREAD_COUNT } from "@/lib/spreads";
 import { SCROLL_TAIL, startScrollTracking } from "@/lib/scroll";
+import type { PortfolioPiece } from "@/lib/supabase";
 import { Intro } from "./Intro";
 import { Nav } from "./overlay/Nav";
-import { Masthead } from "./overlay/Masthead";
-import { ContactStrip } from "./overlay/ContactStrip";
 import { ScrollRail } from "./overlay/ScrollRail";
 import { ScrollHint } from "./overlay/ScrollHint";
 
@@ -20,7 +19,16 @@ const BinderCanvas = dynamic(
   { ssr: false }
 );
 
-export function HomeExperience() {
+/**
+ * The homepage.
+ *
+ * Everything that used to be set in HTML over the top of the binder — the
+ * masthead, the standfirst, the section blurb, the contact strip — is now
+ * printed on the pages themselves. Two typographic systems arguing across one
+ * screen is what made it feel like two websites; there is only the book now,
+ * and the bar you steer it with.
+ */
+export function HomeExperience({ pieces }: { pieces: PortfolioPiece[] }) {
   const [ready, setReady] = useState(false);
   const router = useRouter();
 
@@ -54,14 +62,12 @@ export function HomeExperience() {
       <Intro />
       {/* Pinned stage: nothing in here scrolls, it responds to scroll. */}
       <div className="stage">
-        <BinderCanvas onOpen={openSpread} />
+        <BinderCanvas pieces={pieces} onOpen={openSpread} />
         <div className="rules" aria-hidden="true" />
         <div className="overlay">
           <Nav />
-          <Masthead />
           <ScrollRail />
           <ScrollHint />
-          <ContactStrip />
         </div>
       </div>
 

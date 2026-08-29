@@ -1,23 +1,52 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 
+import { buildPages } from "@/lib/page-art";
+import type { PortfolioPiece } from "@/lib/supabase";
 import { Binder } from "./Binder";
 import { DevBridge } from "./DevBridge";
 import { StudioEnvironment } from "./Environment";
 
 /**
- * The 3D layer. Deliberately holds no React state — everything it animates is
- * read from the scroll store inside the render loop, so this subtree mounts
- * once and never re-renders.
+ * The 3D layer.
  *
- * `onOpen` is the one thing that goes back out: the spread the reader clicked,
- * which the shell turns into a route. Keeping the router out of here means the
- * canvas subtree still never re-renders.
+ * Holds one piece of state and no more: the drawn pages. Everything it
+ * animates is read from the scroll store inside the render loop, so once the
+ * art is in, this subtree stops re-rendering.
+ *
+ * `onOpen` is the one thing that goes back out — the spread the reader
+ * clicked, which the shell turns into a route.
  */
-export function BinderCanvas({ onOpen }: { onOpen?: (spread: number) => void }) {
+export function BinderCanvas({
+  pieces,
+  onOpen,
+}: {
+  pieces: PortfolioPiece[];
+  onOpen?: (spread: number) => void;
+}) {
+  const [pages, setPages] = useState<Map<string, HTMLCanvasElement> | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    buildPages(pieces)
+      .then((drawn) => {
+        if (live) setPages(drawn);
+      })
+      .catch((err: unknown) => {
+        // A binder with no art is still a binder; the boards and rings render
+        // and the rest of the page works.
+        console.error("Could not draw the binder pages:", err);
+        if (live) setPages(new Map());
+      });
+
+    return () => {
+      live = false;
+    };
+  }, [pieces]);
+
   return (
     <div className="canvas-layer" aria-hidden="true">
       <Canvas
@@ -51,7 +80,7 @@ export function BinderCanvas({ onOpen }: { onOpen?: (spread: number) => void }) 
         <ambientLight intensity={0.3} />
 
         <Suspense fallback={null}>
-          <Binder onOpen={onOpen} />
+          {pages && <Binder onOpen={onOpen} pages={pages} />}
         </Suspense>
         <DevBridge />
       </Canvas>

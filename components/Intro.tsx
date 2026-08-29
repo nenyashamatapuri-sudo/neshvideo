@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import { ArriflexSR3, MamiyaRZ67 } from "./Ornament";
 
-/** The two cameras the work is made on: stills, then motion. */
+/**
+ * The two cameras the work is made on: stills, then motion.
+ *
+ * Unlabelled on purpose. The marks carry it — anyone who recognises an RZ67
+ * needed no caption, and anyone who does not was only being handed two model
+ * numbers on the way into a portfolio.
+ */
 const RIG = [
   { key: "rz67", label: "Mamiya RZ67", Art: MamiyaRZ67 },
   { key: "sr3", label: "Arriflex SR3", Art: ArriflexSR3 },
@@ -98,8 +104,9 @@ export function Intro() {
       <div className="intro__rig">
         {RIG.map(({ key, label, Art }) => (
           <figure className="intro__camera" key={key}>
+            {/* The name stays as the accessible name and nowhere else. */}
             <Art className="intro__art" />
-            <figcaption>{label}</figcaption>
+            <figcaption className="sr-only">{label}</figcaption>
           </figure>
         ))}
       </div>

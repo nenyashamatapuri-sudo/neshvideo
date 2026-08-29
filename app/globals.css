@@ -82,12 +82,8 @@ button {
 .label,
 .nav__links a,
 .nav__counter,
-.strip__label,
 .rail__name,
-.hint,
-.masthead__kicker,
-.masthead__meta,
-.masthead__cta {
+.hint {
   font-size: clamp(0.6rem, 0.74vw, 0.72rem);
   letter-spacing: 0.17em;
   text-transform: uppercase;
@@ -329,108 +325,6 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
   color: var(--paper-dim);
 }
 
-/* --------------------------------------------------------------- masthead */
-
-.masthead {
-  position: relative;
-  align-self: end;
-  padding: 0 var(--edge) clamp(0.5rem, 1.6vw, 1.5rem);
-  max-width: min(100%, 54ch);
-}
-
-.masthead__kicker {
-  display: flex;
-  align-items: center;
-  gap: 0.85rem;
-  margin: 0 0 clamp(0.5rem, 1vw, 0.9rem);
-  color: var(--paper-dim);
-  animation: rise 700ms 120ms var(--ease) both;
-}
-.masthead__index {
-  display: grid;
-  place-items: center;
-  min-width: 2.35em;
-  padding: 0.4em 0.5em;
-  background: var(--red);
-  color: var(--paper);
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  transition: background var(--slow) var(--ease);
-}
-
-.masthead__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 0.22em;
-  margin: 0;
-  font-family: var(--font-display), Impact, sans-serif;
-  font-weight: 400;
-  /* Big enough that long chapter names run past the edge of the sheet. */
-  font-size: clamp(3.4rem, 12.8vw, 12.5rem);
-  line-height: 0.76;
-  letter-spacing: -0.03em;
-  color: var(--red);
-  /* The oblique cut of the reference masthead. Anton has no italic, so the
-     slant is applied geometrically. */
-  transform: skewX(var(--slant));
-  transform-origin: 0 100%;
-  /* Optical crop: the masthead starts fractionally off-page, like the ad. */
-  margin-left: -0.045em;
-}
-
-.masthead__word {
-  display: block;
-  text-shadow: 0.036em 0.036em 0 var(--ink);
-  /* Each word wipes up behind its own edge. */
-  clip-path: inset(-20% 0 0 0);
-  animation: wipe-up 1000ms var(--ease) both;
-}
-
-/**
- * The photograph cut out of the type.
- *
- * The fill is anchored to the whole masthead rather than to each word, so one
- * continuous image runs across both lines instead of repeating per word. Only
- * applied where the browser supports it — everywhere else the type stays flat
- * red, which is the same design a step quieter.
- */
-/**
- * The photograph cut out of the type.
- *
- * The fill sits on each word rather than on the line that contains them. That
- * matters: `background-clip: text` is clipped by the element that *carries*
- * the background, and in Chromium anything on a descendant that creates a
- * stacking context — a transform, a clip-path, an isolation — silently stops
- * the whole thing painting. Putting background and glyphs on the same element
- * removes that class of bug entirely.
- *
- * Red is screened under the picture so the shadow areas of a letterform never
- * go black-on-black: the word always reads, and the highlights still come
- * through as photograph.
- */
-@supports (background-clip: text) or (-webkit-background-clip: text) {
-  .masthead__word {
-    background-image:
-      linear-gradient(var(--red), var(--red)),
-      var(--fill);
-    background-blend-mode: screen;
-    background-size: cover;
-    background-position: center 42%;
-    background-repeat: no-repeat;
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    text-shadow: none;
-    /* The reveal is opacity only — a transform here would clip the fill away. */
-    clip-path: none;
-    animation-name: fade-in;
-  }
-}
-
-.masthead__word:nth-child(2) {
-  animation-delay: 90ms;
-}
 @keyframes wipe-up {
   from {
     transform: translateY(0.9em) rotate(1.2deg);
@@ -460,42 +354,6 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-.masthead__foot {
-  display: grid;
-  justify-items: start;
-  gap: clamp(0.7rem, 1.4vw, 1.1rem);
-  margin-top: clamp(1rem, 2vw, 1.8rem);
-  padding-top: clamp(0.8rem, 1.6vw, 1.3rem);
-  border-top: 2px solid var(--rule);
-  animation: rise 800ms 260ms var(--ease) both;
-}
-
-.masthead__blurb {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.9rem;
-  max-width: 46ch;
-  margin: 0;
-  font-size: clamp(0.95rem, 1.3vw, 1.25rem);
-  line-height: 1.3;
-  font-weight: 700;
-  color: var(--paper);
-  text-wrap: pretty;
-}
-
-/* The single number, set as a chip so it reads as data, not prose. */
-.masthead__count {
-  padding: 0.4em 0.7em;
-  background: var(--red);
-  color: var(--paper);
-  font-size: clamp(0.56rem, 0.68vw, 0.66rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-weight: 800;
-  white-space: nowrap;
 }
 
 .cta {
@@ -638,95 +496,6 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
   50% { transform: scaleX(1); opacity: 1; }
 }
 
-/* ------------------------------------------------------------------ strip */
-
-.strip {
-  position: relative;
-  padding: 0 var(--edge) clamp(0.9rem, 2vw, 1.6rem);
-}
-
-.strip__label {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin: 0 0 0.6rem;
-  color: var(--paper-dim);
-}
-.strip__label span {
-  color: color-mix(in srgb, var(--paper-dim) 65%, transparent);
-}
-.strip__label::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: var(--rule);
-}
-
-.strip__row {
-  display: flex;
-  gap: 0.4rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.strip__row::-webkit-scrollbar {
-  display: none;
-}
-
-.strip__cell {
-  flex: 0 0 auto;
-  animation: rise 600ms var(--ease) both;
-  animation-delay: calc(var(--i) * 40ms + 300ms);
-}
-.strip__cell button {
-  position: relative;
-  display: block;
-  width: clamp(4.2rem, 7.4vw, 7rem);
-  aspect-ratio: 10 / 7;
-  overflow: hidden;
-  border: 1px solid transparent;
-  opacity: 0.55;
-  transition: filter 380ms var(--ease), border-color 380ms var(--ease),
-    transform 380ms var(--ease);
-}
-.strip__cell img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.strip__cell-no {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  padding: 0.15em 0.4em;
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
-  background: var(--ink);
-  color: var(--paper-dim);
-  opacity: 0;
-  transition: opacity 300ms var(--ease);
-}
-.strip__cell button:hover {
-  opacity: 1;
-  transform: translateY(-3px);
-  border-color: var(--rule);
-}
-.strip__cell button:hover .strip__cell-no {
-  opacity: 1;
-}
-.strip__cell.is-active button {
-  opacity: 1;
-  border-color: var(--red);
-  box-shadow: inset 0 0 0 2px var(--red);
-}
-.strip__cell.is-active .strip__cell-no {
-  opacity: 1;
-  background: var(--red);
-  color: var(--paper);
-}
-
 /* --------------------------------------------------------------- noscript */
 
 .noscript {
@@ -761,33 +530,16 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
 /* ------------------------------------------------------------- responsive */
 
 @media (max-width: 880px) {
-  .rail,
-  .hint {
+  /* The rail sits down the right-hand edge, which on a phone is straight over
+     the page it is meant to be indexing. The hint carries position instead. */
+  .rail {
     display: none;
   }
-  /* The counter is the first thing to go — the contact strip already shows
-     position, and the links matter more than the numbers. */
   .nav__counter {
     display: none;
   }
   .nav {
-    gap: 1rem;
-  }
-  .nav__links {
-    gap: clamp(0.7rem, 3.4vw, 1.2rem);
-  }
-  .nav__no {
-    display: none;
-  }
-  .masthead {
-    max-width: none;
-  }
-  .masthead__title {
-    font-size: clamp(2.6rem, 15vw, 5rem);
-  }
-  .masthead__cta {
-    width: 100%;
-    justify-content: space-between;
+    gap: 0.75rem;
   }
 }
 
@@ -1301,7 +1053,7 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
   margin-top: clamp(4rem, 9vw, 7rem);
 }
 
-/* The section pages get the same band under their masthead. */
+/* The section pages get the same band under their header. */
 .work__rule {
   margin: clamp(2rem, 4vw, 3rem) 0 0;
 }
@@ -2437,4 +2189,198 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
     transform: none;
     letter-spacing: 0.14em;
   }
+}
+
+/* ==========================================================================
+   MOBILE
+   Most people arrive on a phone. The bar has to fit, the binder has to be the
+   thing you touch, and a gallery has to answer the thumb.
+   ========================================================================== */
+
+/*
+ * The bar used to lay four section names, a wordmark, an About link and a
+ * counter across one row, which overflowed the moment the screen was narrower
+ * than about 620px — the right-hand end was simply cut off the screen with no
+ * way to reach it. Below that width the sections become their own scrollable
+ * row under the wordmark.
+ */
+@media (max-width: 620px) {
+  .nav {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-areas:
+      "mark end"
+      "links links";
+    align-items: center;
+    gap: 0.6rem 1rem;
+    padding: 0.85rem var(--edge) 0.5rem;
+  }
+
+  .nav__mark {
+    grid-area: mark;
+  }
+  .nav__end {
+    grid-area: end;
+    justify-self: end;
+  }
+
+  .nav__links {
+    grid-area: links;
+    /* Scrollable rather than truncated: every section stays reachable. */
+    display: flex;
+    gap: 1.15rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    /* Bleeds to both edges so a half-cut item shows there is more to reach,
+       but the first one still starts clear of the screen edge. */
+    margin: 0 calc(var(--edge) * -1);
+    padding: 0.15rem calc(var(--edge) + 0.35rem) 0.45rem;
+    /* Without this the first snap point sits flush against the container edge
+       and the browser scrolls the padding straight back off, clipping "01". */
+    scroll-padding-left: calc(var(--edge) + 0.35rem);
+  }
+  .nav__links::-webkit-scrollbar {
+    display: none;
+  }
+  .nav__links a {
+    flex: none;
+    scroll-snap-align: start;
+    /* A comfortable target, not a 10px line of type. */
+    padding-bottom: 0.5em;
+  }
+  .nav__no {
+    display: inline-block;
+  }
+}
+
+/* The hint used to be hidden on phones, which is exactly backwards: a phone
+   gives no cursor and no hover, so the invitation to scroll matters more. */
+@media (max-width: 880px) {
+  .hint {
+    display: flex;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: clamp(1.5rem, 5vh, 3rem);
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .hint.is-gone {
+    transform: translateX(-50%) translateY(0.6rem);
+  }
+  .hint__say {
+    text-align: center;
+  }
+  .hint__rule {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------ the viewer -- */
+
+/*
+ * The stage follows the thumb while a swipe is in progress and eases home when
+ * it is let go. No transition during the drag — the transform is being written
+ * every frame from the pointer, and easing it would feel like drag underwater.
+ */
+.viewer__stage.is-settling {
+  transition: transform 320ms var(--ease), opacity 320ms var(--ease);
+}
+
+.viewer__stage {
+  /* The browser must not claim horizontal gestures for its own back-swipe. */
+  touch-action: pan-y;
+}
+.viewer__still {
+  /* Otherwise a long-press drags the picture out as a file mid-swipe. */
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+@media (hover: none) {
+  /* Arrows are for pointers. On a touch screen the swipe is the control, and
+     two 45px buttons over the picture are just something to hit by accident. */
+  .viewer__prev,
+  .viewer__next {
+    display: none;
+  }
+
+  .viewer {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0.75rem;
+  }
+  .viewer__stage {
+    grid-column: 1;
+  }
+  .viewer__foot {
+    grid-row: 3;
+  }
+
+  /* A row of pips, the way a phone gallery says how far along you are. */
+  .viewer__count {
+    font-size: 0.72rem;
+  }
+}
+
+/* Bigger tap targets throughout, and no hover-lift on tiles that cannot be
+   hovered — on touch it only ever fires *after* the tap, which reads as lag. */
+@media (hover: none) {
+  .shot__open:hover .shot__frame {
+    transform: none;
+    box-shadow: none;
+  }
+  /* Pressed state instead: immediate, and it confirms the tap landed. */
+  .shot__open:active .shot__frame {
+    transform: scale(0.975);
+    transition: transform 120ms ease-out;
+  }
+  .viewer__close {
+    width: 3.2rem;
+    height: 3.2rem;
+  }
+}
+
+/* --------------------------------------------------------------- galleries -- */
+
+@media (max-width: 560px) {
+  /* Two-up on a phone, with the drops flattened — a stagger needs width to
+     read as art direction, and without it just looks like broken alignment. */
+  .gallery {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  .gallery__head {
+    padding-bottom: 2rem;
+  }
+  .shot__cap {
+    padding-top: 0.6rem;
+    font-size: 0.56rem;
+  }
+  .piece__credits {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* iOS Safari's toolbars change the viewport height mid-scroll; svh keeps the
+   pinned stage from jumping every time they hide. */
+@supports (height: 100svh) {
+  .stage {
+    height: 100svh;
+  }
+}
+
+/* Available to a screen reader, invisible to everyone else. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }

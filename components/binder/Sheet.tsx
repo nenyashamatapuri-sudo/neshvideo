@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useTexture } from "@react-three/drei";
 import * as THREE from "three";
 
-import { PAGE_MASK_SRC, pageSrc, type Sheet as SheetData } from "@/lib/spreads";
+import { PAGE_MASK_SRC, type Sheet as SheetData } from "@/lib/spreads";
 
 export const PAGE_W = 1;
 export const PAGE_H = 1.414;
@@ -71,6 +71,8 @@ interface SheetProps {
   /** Live turn amount, 0 (right, untouched) to 1 (fully turned to the left). */
   turnRef: React.RefObject<number[]>;
   activeRef: React.RefObject<number>;
+  /** Page art, drawn from the catalogue. Keyed by face id. */
+  pages: Map<string, HTMLCanvasElement>;
 }
 
 /**
@@ -82,13 +84,32 @@ interface SheetProps {
  * greyscale mask rather than from alpha baked into each page, which is what
  * lets the artwork be opaque JPEG — and lets real photographs drop in untouched.
  */
-export function Sheet({ data, index, turnRef, activeRef }: SheetProps) {
+export function Sheet({ data, index, turnRef, activeRef, pages }: SheetProps) {
   const group = useRef<THREE.Group>(null);
-  const [frontMap, backMap, holeMask] = useTexture([
-    pageSrc(data.front.id),
-    pageSrc(data.back.id),
-    PAGE_MASK_SRC,
-  ]);
+  const holeMask = useTexture(PAGE_MASK_SRC);
+
+  // The art is a canvas drawn from the CMS rather than a file on disk, so the
+  // binder shows the work as it is now instead of as it was when somebody last
+  // ran a generator.
+  const { frontMap, backMap } = useMemo(() => {
+    const make = (id: string) => {
+      const canvas = pages.get(id);
+      if (!canvas) return null;
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.anisotropy = 8;
+      return texture;
+    };
+    return { frontMap: make(data.front.id), backMap: make(data.back.id) };
+  }, [pages, data.front.id, data.back.id]);
+
+  // Canvas textures hold a GPU allocation that nothing else will free.
+  useEffect(() => {
+    return () => {
+      frontMap?.dispose();
+      backMap?.dispose();
+    };
+  }, [frontMap, backMap]);
 
   const uniforms = useMemo(
     () => ({
@@ -106,14 +127,11 @@ export function Sheet({ data, index, turnRef, activeRef }: SheetProps) {
   }, []);
 
   const { frontMat, backMat, depthMat } = useMemo(() => {
-    for (const t of [frontMap, backMap]) {
-      t.colorSpace = THREE.SRGBColorSpace;
-      t.anisotropy = 8;
-    }
-
-    // Back art is stored mirrored, so flipping its UVs here cancels out and the
-    // image reads the right way round with the gutter still on the spine.
-    const mirror = (t: THREE.Texture) => {
+    // The back face is seen through the sheet, so its UVs run the other way.
+    // Flipping here puts the image the right way round with the gutter still
+    // on the spine.
+    const mirror = (t: THREE.Texture | null) => {
+      if (!t) return null;
       const m = t.clone();
       m.wrapS = THREE.RepeatWrapping;
       m.repeat.x = -1;
@@ -134,12 +152,14 @@ export function Sheet({ data, index, turnRef, activeRef }: SheetProps) {
     };
     const frontMat = new THREE.MeshStandardMaterial({
       ...common,
-      map: frontMap,
+      map: frontMap ?? undefined,
+      color: frontMap ? 0xffffff : 0x1a1614,
       alphaMap: holeMask,
     });
     const backMat = new THREE.MeshStandardMaterial({
       ...common,
-      map: backArt,
+      map: backArt ?? undefined,
+      color: backArt ? 0xffffff : 0x1a1614,
       alphaMap: holeMask,
       side: THREE.BackSide,
     });

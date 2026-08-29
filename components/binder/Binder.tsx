@@ -86,7 +86,13 @@ function Boards() {
   );
 }
 
-export function Binder({ onOpen }: { onOpen?: (spread: number) => void }) {
+export function Binder({
+  onOpen,
+  pages,
+}: {
+  onOpen?: (spread: number) => void;
+  pages: Map<string, HTMLCanvasElement>;
+}) {
   const group = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const viewport = useThree((s) => s.size);
@@ -172,7 +178,14 @@ export function Binder({ onOpen }: { onOpen?: (spread: number) => void }) {
       <Boards />
       <Rings />
       {SHEETS.map((sheet, i) => (
-        <Sheet key={sheet.front.id} data={sheet} index={i} turnRef={turns} activeRef={active} />
+        <Sheet
+          key={sheet.front.id}
+          data={sheet}
+          index={i}
+          turnRef={turns}
+          activeRef={active}
+          pages={pages}
+        />
       ))}
 
       {/*

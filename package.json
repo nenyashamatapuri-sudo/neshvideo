@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "media": "node --no-warnings scripts/gen-placeholders.mjs",
-    "import": "node --no-warnings scripts/import-work.mjs",
     "cdn": "node --no-warnings scripts/upload-cdn.mjs",
     "seed": "node --env-file=.env.local scripts/seed-work.mjs",
     "pages": "node --env-file=.env.local scripts/gen-pages.mjs"

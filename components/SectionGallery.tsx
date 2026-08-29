@@ -50,6 +50,12 @@ export default function SectionGallery({
   const [playing, setPlaying] = useState(false);
   const returnFocus = useRef<HTMLButtonElement | null>(null);
 
+  // Live drag offset, in pixels. Kept in state because the stage has to follow
+  // the thumb frame by frame — that following is the whole point.
+  const [drag, setDrag] = useState(0);
+  const [settling, setSettling] = useState(false);
+  const gesture = useRef<{ x: number; y: number; locked: null | "x" | "y" } | null>(null);
+
   const piece = openAt === null ? null : pieces[openAt];
   const slides = piece ? slidesFor(piece) : [];
 
@@ -73,6 +79,55 @@ export default function SectionGallery({
     },
     [slides.length]
   );
+
+  /**
+   * Swipe.
+   *
+   * The stage tracks the thumb as it moves rather than waiting for the gesture
+   * to finish and then jumping — that lag is the difference between a website
+   * with arrows bolted on and something that feels like it is being handled.
+   * A short flick counts as much as a long drag, so the throw is judged on
+   * distance *or* speed.
+   */
+  const onPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse" || slides.length < 2) return;
+    gesture.current = { x: e.clientX, y: e.clientY, locked: null };
+    setSettling(false);
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    const g = gesture.current;
+    if (!g) return;
+
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+
+    // Decide once whether this is a swipe or the reader scrolling the page,
+    // then stay with that decision for the rest of the gesture.
+    if (!g.locked) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      g.locked = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    }
+    if (g.locked !== "x") return;
+
+    // Resistance at the two ends, so the gallery says where it stops.
+    const atEnd = (dx > 0 && slide === 0) || (dx < 0 && slide === slides.length - 1);
+    setDrag(atEnd ? dx * 0.32 : dx);
+  };
+
+  const onPointerUp = (e: React.PointerEvent) => {
+    const g = gesture.current;
+    gesture.current = null;
+    if (!g || g.locked !== "x") return;
+
+    const dx = e.clientX - g.x;
+    const threshold = Math.min(110, window.innerWidth * 0.22);
+
+    setSettling(true);
+    setDrag(0);
+    if (dx <= -threshold) step(1);
+    else if (dx >= threshold) step(-1);
+  };
 
   /** Straight from one piece to the next without going back to the grid. */
   const stepPiece = useCallback(
@@ -219,7 +274,27 @@ export default function SectionGallery({
             </button>
           )}
 
-          <div className="viewer__stage" onClick={(e) => e.stopPropagation()}>
+          <div
+            className={`viewer__stage${settling ? " is-settling" : ""}`}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={onPointerUp}
+            onPointerCancel={() => {
+              gesture.current = null;
+              setSettling(true);
+              setDrag(0);
+            }}
+            onTransitionEnd={() => setSettling(false)}
+            style={
+              {
+                transform: `translate3d(${drag}px, 0, 0)`,
+                // Falls away as the drag grows, so the picture lets go of the
+                // page a little before it is replaced.
+                opacity: 1 - Math.min(0.4, Math.abs(drag) / 900),
+              } as React.CSSProperties
+            }
+          >
             {current?.kind === "film" ? (
               playing ? (
                 <iframe
