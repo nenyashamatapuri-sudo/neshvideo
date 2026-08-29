@@ -2394,8 +2394,9 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
 
 /* ==========================================================================
    BACKDROP
-   The wall the binder stands against: a sun, a cold field under it, and grain.
-   Dim on purpose — it is texture behind the work, not a picture of its own.
+   The wall the binder stands against. Low and dirty on purpose: a clean
+   gradient reads as a screensaver, and anything bright behind a photograph is
+   competing with it.
    ========================================================================== */
 
 .backdrop {
@@ -2404,6 +2405,7 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  background: #0b0908;
   /* Written every frame by the parallax loop. */
   --bx: 0%;
   --by: 0%;
@@ -2418,70 +2420,68 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
 }
 
 /*
- * The cold half. A deep indigo pooled at the lower left, so the frame is not
- * one temperature all the way through and the red has something to be warm
- * against.
+ * The colour underneath: a cold indigo pooled low and left, a warm one low and
+ * right, and a blotched middle so the wall is not one even wash. The blotches
+ * are what stop it looking generated — real ground is uneven.
  */
 .backdrop__field {
   background:
-    radial-gradient(
-      70% 58% at 18% 96%,
-      color-mix(in srgb, #2f4d8f 62%, transparent) 0%,
-      transparent 68%
-    ),
-    radial-gradient(
-      52% 48% at 96% 88%,
-      color-mix(in srgb, var(--red-deep) 52%, transparent) 0%,
-      transparent 70%
-    );
-  opacity: 0.82;
+    radial-gradient(58% 44% at 16% 92%, color-mix(in srgb, #24406f 58%, transparent) 0%, transparent 66%),
+    radial-gradient(46% 40% at 94% 86%, color-mix(in srgb, var(--red-deep) 46%, transparent) 0%, transparent 68%),
+    radial-gradient(26% 20% at 34% 42%, rgb(0 0 0 / 0.55) 0%, transparent 70%),
+    radial-gradient(20% 26% at 74% 58%, rgb(0 0 0 / 0.45) 0%, transparent 72%),
+    radial-gradient(30% 18% at 58% 12%, rgb(0 0 0 / 0.4) 0%, transparent 74%);
+  opacity: 0.55;
   transform: translate3d(var(--bx), var(--by), 0);
 }
 
 /*
- * Rays. A conic sweep of alternating spokes, masked to a disc so they fade
- * before they reach anything, then blurred — at full sharpness it reads as a
- * pinwheel rather than as light.
+ * Rays, broken up. The spokes are uneven widths so the fan does not read as a
+ * pinwheel, and the mask is pushed off-centre so it fades raggedly rather than
+ * in a neat circle.
  */
 .backdrop__rays {
   background: repeating-conic-gradient(
-    from 0deg at 62% 22%,
-    color-mix(in srgb, var(--gold) 70%, transparent) 0deg 2.2deg,
-    transparent 2.2deg 7.4deg
+    from 0deg at 64% 20%,
+    color-mix(in srgb, var(--gold) 52%, transparent) 0deg 1.4deg,
+    transparent 1.4deg 5.2deg,
+    color-mix(in srgb, var(--gold) 34%, transparent) 5.2deg 6.1deg,
+    transparent 6.1deg 11deg
   );
-  mask-image: radial-gradient(46% 46% at 62% 22%, #000 12%, transparent 68%);
-  -webkit-mask-image: radial-gradient(46% 46% at 62% 22%, #000 12%, transparent 68%);
-  opacity: calc(0.34 * var(--heat));
-  filter: blur(1.5px);
+  mask-image: radial-gradient(38% 42% at 60% 18%, #000 6%, transparent 62%);
+  -webkit-mask-image: radial-gradient(38% 42% at 60% 18%, #000 6%, transparent 62%);
+  opacity: calc(0.12 * var(--heat));
+  filter: blur(2.5px);
   transform: translate3d(var(--bx), var(--by), 0) rotate(var(--spin));
 }
 
-/* The disc itself: white core through gold into oxblood. */
+/* The disc. Dim, and never white — a blown highlight behind the book pulls the
+   eye straight off the work. */
 .backdrop__sun {
-  background:
-    radial-gradient(
-      21% 21% at 62% 22%,
-      color-mix(in srgb, var(--paper) 88%, transparent) 0%,
-      color-mix(in srgb, var(--gold) 82%, transparent) 34%,
-      color-mix(in srgb, var(--red) 60%, transparent) 62%,
-      transparent 78%
-    );
-  opacity: calc(0.78 * var(--heat));
-  filter: blur(14px);
+  background: radial-gradient(
+    17% 17% at 62% 20%,
+    color-mix(in srgb, var(--gold) 56%, transparent) 0%,
+    color-mix(in srgb, var(--red) 40%, transparent) 48%,
+    transparent 74%
+  );
+  opacity: calc(0.3 * var(--heat));
+  filter: blur(22px);
   transform: translate3d(calc(var(--bx) * 1.5), calc(var(--by) * 1.5), 0);
 }
 
 /*
- * Grain over everything.
- *
- * feTurbulence rather than a tiled bitmap: it costs no bytes, never repeats,
- * and stays sharp on a phone's pixel ratio where a 160px tile would visibly
- * step. This is the layer that stops the whole thing looking like CSS.
+ * The dirt. Two turbulences at different frequencies — a fine grain for the
+ * stock and a coarse, high-contrast one for blotching — plus a wash of streaks
+ * pulled across at a slight angle. feTurbulence rather than a tiled bitmap: it
+ * costs no bytes, never repeats, and stays sharp at any pixel ratio.
  */
 .backdrop__grain {
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity: 0.24;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 .4 .8 1'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23c)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 900px 900px, 240px 240px;
+  opacity: 0.4;
   mix-blend-mode: overlay;
 }
 
@@ -2493,96 +2493,5 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
 @media (prefers-reduced-motion: reduce) {
   .backdrop > * {
     transform: none;
-  }
-}
-
-/* A phone is doing enough work already running the binder. */
-@media (max-width: 620px) {
-  .backdrop__rays {
-    display: none;
-  }
-  .backdrop__grain {
-    opacity: 0.18;
-  }
-}
-
-/* ==========================================================================
-   SOUND
-   A site that makes noise has to offer the off switch in the same breath, so
-   the control sits on screen rather than in a menu.
-   ========================================================================== */
-
-.sound {
-  position: absolute;
-  left: var(--edge);
-  bottom: clamp(1.5rem, 5vh, 3rem);
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 0;
-  border: 0;
-  background: none;
-  color: var(--paper-dim);
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: clamp(0.5rem, 0.64vw, 0.62rem);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 260ms var(--ease);
-}
-.sound:hover {
-  color: var(--paper);
-}
-.sound:focus-visible {
-  outline: 1px solid var(--red);
-  outline-offset: 6px;
-}
-
-/* Four bars on a level meter. They move while sound is on and lie flat when
-   it is off, which says the state without needing the word beside it. */
-.sound__bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  width: 0.95rem;
-  height: 0.95rem;
-}
-.sound__bars i {
-  flex: 1;
-  background: currentColor;
-  transform-origin: bottom;
-  animation: meter 900ms var(--ease) infinite alternate;
-}
-.sound__bars i:nth-child(1) { height: 40%; animation-delay: 0ms; }
-.sound__bars i:nth-child(2) { height: 78%; animation-delay: 140ms; }
-.sound__bars i:nth-child(3) { height: 58%; animation-delay: 70ms; }
-.sound__bars i:nth-child(4) { height: 92%; animation-delay: 210ms; }
-
-.sound.is-muted {
-  color: color-mix(in srgb, var(--paper-dim) 62%, transparent);
-}
-.sound.is-muted .sound__bars i {
-  height: 12%;
-  animation: none;
-}
-
-@keyframes meter {
-  from { transform: scaleY(0.34); }
-  to { transform: scaleY(1); }
-}
-
-@media (max-width: 620px) {
-  /* The word goes; the meter is the control. */
-  .sound__word {
-    display: none;
-  }
-  .sound {
-    bottom: clamp(1rem, 3.5vh, 2rem);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .sound__bars i {
-    animation: none;
   }
 }

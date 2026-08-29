@@ -6,7 +6,6 @@ import { useCallback, useRef } from "react";
 
 import { SECTIONS, SPREAD_COUNT } from "@/lib/spreads";
 import { jumpToSpread } from "@/lib/scroll";
-import { play } from "@/lib/audio";
 import { useActiveSpread } from "./useActiveSpread";
 
 /** Long enough for the sheets to settle on the spread before the page changes. */
@@ -59,10 +58,7 @@ export function Nav() {
             onClick={(e) => openSection(e, i + 1, s.href)}
             // Turning the binder on hover would fight the reader's scroll, so
             // the invitation is in the type: it lifts, and the rule fills.
-            onMouseEnter={() => {
-              router.prefetch(s.href);
-              play("tick");
-            }}
+            onMouseEnter={() => router.prefetch(s.href)}
           >
             <span className="nav__no">{String(i + 1).padStart(2, "0")}</span>
             <span className="nav__name">

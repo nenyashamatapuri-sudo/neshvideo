@@ -19,12 +19,15 @@ import { MEDIA_EXT } from "./media-ext.ts";
 import { mediaUrl } from "./media.ts";
 
 /**
- * Red, black, paper — and gold.
+ * Red, paper — and gold.
  *
- * Gold is the fourth and last colour, and it is rationed: ornament, folios and
- * the chevron bands only, never photography and never body copy. It is here
- * because the work has Zimbabwean roots, and red-black-gold is the palette
- * that language is actually built in.
+ * Pages are printed on one of two grounds and no more: warm stock, or flat
+ * red. Black was a third, and it made the book read as three unrelated
+ * documents rather than one; it is gone. Every section now sets the same way,
+ * a red page facing a paper one.
+ *
+ * `ink` survives only as the colour type is set in on paper stock. Gold is
+ * rationed to ornament and folios — never photography, never body copy.
  */
 export const PAPER = {
   /** Warm uncoated stock, as in the reference programme. */
@@ -67,8 +70,8 @@ export type LayoutKind = "title" | "hero" | "grid" | "plate" | "contact" | "post
 
 export interface Layout {
   kind: LayoutKind;
-  /** Ground colour behind the image. Defaults to paper stock. */
-  ground?: "paper" | "red" | "ink";
+  /** Ground behind the image. Defaults to paper stock. */
+  ground?: "paper" | "red";
 }
 
 /** What the placeholder generator draws. Ignored once real photos are in. */
@@ -147,11 +150,11 @@ export const SHEETS: Sheet[] = [
   },
   {
     front: { id: "directing-grid", seed: 2021, tone: SOFT, scene: "figure", layout: { kind: "grid" } },
-    back: { id: "photography-plate", seed: 2022, tone: WARM, scene: "detail", layout: { kind: "plate" } },
+    back: { id: "photography-plate", seed: 2022, tone: WARM, scene: "detail", layout: { kind: "plate", ground: "red" } },
   },
   {
     front: { id: "photography-contact", seed: 3031, tone: PLATE, scene: "figure", layout: { kind: "contact" } },
-    back: { id: "videography-hero", seed: 3032, tone: WARM, scene: "arch", layout: { kind: "hero", ground: "ink" } },
+    back: { id: "videography-hero", seed: 3032, tone: WARM, scene: "arch", layout: { kind: "hero", ground: "red" } },
   },
   {
     front: { id: "videography-grid", seed: 4041, tone: SOFT, scene: "arch", layout: { kind: "grid" } },
@@ -159,7 +162,7 @@ export const SHEETS: Sheet[] = [
   },
   {
     front: { id: "production-grid", seed: 5051, tone: SOFT, scene: "detail", layout: { kind: "grid" } },
-    back: { id: "colophon", seed: 5052, tone: PLATE, scene: "land", layout: { kind: "contact", ground: "ink" } },
+    back: { id: "colophon", seed: 5052, tone: PLATE, scene: "land", layout: { kind: "contact" } },
   },
 ];
 

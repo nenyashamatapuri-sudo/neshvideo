@@ -1,20 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
 import { SECTIONS, SPREAD_COUNT } from "@/lib/spreads";
 import { SCROLL_TAIL, startScrollTracking } from "@/lib/scroll";
-import { play } from "@/lib/audio";
-import { useActiveSpread } from "./overlay/useActiveSpread";
 import type { PortfolioPiece } from "@/lib/supabase";
 import { Backdrop } from "./Backdrop";
 import { Intro } from "./Intro";
 import { Nav } from "./overlay/Nav";
 import { ScrollRail } from "./overlay/ScrollRail";
 import { ScrollHint } from "./overlay/ScrollHint";
-import { SoundToggle } from "./overlay/SoundToggle";
 
 // WebGL has no business running on the server, and skipping SSR for it keeps
 // the first paint to the (fully readable) editorial layer.
@@ -61,17 +58,6 @@ export function HomeExperience({ pieces }: { pieces: PortfolioPiece[] }) {
     };
   }, []);
 
-  // A sheet passing the spine is the one event in the whole page that is
-  // genuinely a page turn, so it is the one that gets the paper sound. Firing
-  // on the scroll itself would be a continuous hiss.
-  const spread = useActiveSpread();
-  const lastSpread = useRef(spread);
-  useEffect(() => {
-    if (spread !== lastSpread.current) {
-      lastSpread.current = spread;
-      play("turn");
-    }
-  }, [spread]);
 
   return (
     <div className={`shell${ready ? " is-ready" : ""}`}>
@@ -85,7 +71,6 @@ export function HomeExperience({ pieces }: { pieces: PortfolioPiece[] }) {
           <Nav />
           <ScrollRail />
           <ScrollHint />
-          <SoundToggle />
         </div>
       </div>
 

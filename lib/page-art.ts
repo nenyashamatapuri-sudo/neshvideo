@@ -26,7 +26,7 @@ export const ART_H = 1274;
 /** The gutter tenth is kept clear of art — it is where the ring holes bite. */
 const GUTTER = 0.1;
 
-type Ground = "paper" | "red" | "ink";
+type Ground = "paper" | "red";
 
 export interface PageSpec {
   id: string;
@@ -94,38 +94,24 @@ function rebate(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, 
 }
 
 /**
- * The dentelle course from the Great Enclosure at Great Zimbabwe: a band of
- * chevrons laid in stone. It is the most recognisable piece of Zimbabwean
- * pattern there is, it wants to run in a line, and the work has Zimbabwean
- * roots — so it does the job a rule would otherwise do.
+ * A plain rule.
+ *
+ * This was a band of chevrons — the dentelle course from Great Zimbabwe — but
+ * at the size a page actually renders it read as a row of triangles sitting on
+ * top of the work rather than as part of the printing. A single hairline does
+ * the same structural job and lets the photography be the only pattern on the
+ * page.
  */
-function chevronBand(
+function rule(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   w: number,
   h: number,
-  colors: string[]
+  color: string
 ) {
-  const step = h * 1.15;
-  const n = Math.ceil(w / step);
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(x, y, w, h);
-  ctx.clip();
-
-  for (let i = 0; i < n; i++) {
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.beginPath();
-    ctx.moveTo(x + i * step, y + h);
-    ctx.lineTo(x + i * step + step / 2, y);
-    ctx.lineTo(x + i * step + step, y + h);
-    ctx.closePath();
-    ctx.fill();
-  }
-
-  ctx.restore();
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
 }
 
 /** Solid disc with tapered rays — the device from the collage reference. */
@@ -241,8 +227,8 @@ export function drawPage(
   canvas.width = ART_W;
   canvas.height = ART_H;
 
-  const onDark = spec.ground !== "paper";
-  const ground = spec.ground === "red" ? PAPER.red : spec.ground === "ink" ? "#141110" : PAPER.stock;
+  const onDark = spec.ground === "red";
+  const ground = onDark ? PAPER.red : PAPER.stock;
   const type = onDark ? PAPER.stock : PAPER.ink;
   const dim = onDark ? "rgba(242,237,227,0.62)" : "rgba(17,17,17,0.55)";
 
@@ -264,7 +250,7 @@ export function drawPage(
     //
     // The top band sits well below the trim: the nav bar floats over the head
     // of the page, and a band any higher is simply hidden behind it.
-    chevronBand(ctx, left, m + 84, width, 34, [PAPER.gold, PAPER.stock, PAPER.green]);
+    rule(ctx, left, m + 84, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
 
     sunDisc(ctx, right - 78, m + 252, 44, "rgba(242,237,227,0.9)");
 
@@ -280,7 +266,7 @@ export function drawPage(
     setType(ctx, 30, 500);
     paragraph(ctx, spec.intro, left, ART_H * 0.5 + 232, width * 0.86, 42);
 
-    chevronBand(ctx, left, ART_H - m - 34, width, 34, [PAPER.green, PAPER.stock, PAPER.gold]);
+    rule(ctx, left, ART_H - m - 34, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
   } else if (spec.kind === "poster") {
     if (shots[0]) {
       const ph = ART_H * 0.52;
@@ -303,7 +289,7 @@ export function drawPage(
     setType(ctx, 25, 500);
     paragraph(ctx, spec.intro, left, ART_H - m - 44, width * 0.9, 34);
 
-    chevronBand(ctx, left, ART_H - m - 20, width, 20, [PAPER.gold, PAPER.stock, PAPER.green]);
+    rule(ctx, left, ART_H - m - 20, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
   } else if (spec.kind === "plate") {
     if (shots[0]) {
       const side = Math.min(width, ART_H * 0.6);
@@ -313,7 +299,7 @@ export function drawPage(
       rebate(ctx, px, py, side, side);
     }
 
-    chevronBand(ctx, left, ART_H - m - 190, width, 22, [PAPER.red, PAPER.gold, PAPER.green]);
+    rule(ctx, left, ART_H - m - 190, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
 
     ctx.fillStyle = type;
     setType(ctx, 54, 900, false, -1.2);
@@ -355,7 +341,7 @@ export function drawPage(
       }
     }
 
-    chevronBand(ctx, left, ART_H - m - 128, width, 20, [PAPER.red, PAPER.gold, PAPER.green]);
+    rule(ctx, left, ART_H - m - 128, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
 
     ctx.fillStyle = type;
     setType(ctx, 46, 900, false, -1);
@@ -372,7 +358,7 @@ export function drawPage(
       rebate(ctx, left, hy, width, hh);
     }
 
-    chevronBand(ctx, left, ART_H - m - 200, width, 22, [PAPER.gold, PAPER.stock, PAPER.green]);
+    rule(ctx, left, ART_H - m - 200, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
 
     ctx.fillStyle = type;
     setType(ctx, 58, 900, false, -1.3);
@@ -406,7 +392,7 @@ export function drawPage(
       }
     }
 
-    chevronBand(ctx, left, ART_H - m - 170, width, 22, [PAPER.red, PAPER.gold, PAPER.green]);
+    rule(ctx, left, ART_H - m - 170, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
 
     ctx.fillStyle = type;
     setType(ctx, 52, 900, false, -1.2);

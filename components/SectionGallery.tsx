@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { play } from "@/lib/audio";
 import { RHYTHM } from "@/lib/rhythm";
 import { vimeoId, type PortfolioPiece } from "@/lib/supabase";
 
@@ -61,14 +60,12 @@ export default function SectionGallery({
   const slides = piece ? slidesFor(piece) : [];
 
   const close = useCallback(() => {
-    play("close");
     setOpenAt(null);
     setPlaying(false);
     returnFocus.current?.focus();
   }, []);
 
   const open = (i: number, from: HTMLButtonElement) => {
-    play("open");
     returnFocus.current = from;
     setOpenAt(i);
     setSlide(0);
@@ -77,7 +74,6 @@ export default function SectionGallery({
 
   const step = useCallback(
     (by: number) => {
-      play("swipe");
       setPlaying(false);
       setSlide((n) => (slides.length ? (n + by + slides.length) % slides.length : 0));
     },
