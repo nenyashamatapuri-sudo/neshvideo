@@ -245,28 +245,79 @@ export function drawPage(
   ctx.textBaseline = "alphabetic";
 
   if (spec.kind === "title") {
-    // The cover. Everything the homepage used to say in HTML now says it here,
-    // which is the point: one object carrying the whole masthead.
+    // The cover.
     //
-    // The top band sits well below the trim: the nav bar floats over the head
-    // of the page, and a band any higher is simply hidden behind it.
-    rule(ctx, left, m + 84, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
+    // It was flat red with type on it, which is a colour swatch rather than a
+    // cover. The portrait now fills the lower two thirds, screened hard into
+    // the red so it reads as one printed surface instead of a photograph
+    // pasted on — the ink is the same ink, and the grain runs across both.
+    const portrait = shots[0];
+    if (portrait) {
+      const py = ART_H * 0.3;
+      const ph = ART_H - py;
 
-    sunDisc(ctx, right - 78, m + 252, 44, "rgba(242,237,227,0.9)");
+      ctx.save();
+      // Multiply drops the photograph's own colour and lets the ground burn
+      // through it, which is what a two-colour press would do with it.
+      ctx.globalCompositeOperation = "multiply";
+      ctx.globalAlpha = 0.92;
+      cover(ctx, portrait, 0, py, ART_W, ph);
+      ctx.restore();
 
+      // Screened back in on top, so the highlights come back and the face does
+      // not disappear into the red.
+      ctx.save();
+      ctx.globalCompositeOperation = "overlay";
+      ctx.globalAlpha = 0.5;
+      cover(ctx, portrait, 0, py, ART_W, ph);
+      ctx.restore();
+
+      // The photograph is torn into the page rather than cropped to a box: a
+      // ragged edge across the top of it, drawn as one path.
+      ctx.save();
+      ctx.fillStyle = ground;
+      ctx.beginPath();
+      ctx.moveTo(0, py);
+      let tear = py;
+      for (let x = 0; x <= ART_W; x += 26) {
+        // Deterministic wobble — the same tear on every load.
+        tear = py + Math.sin(x * 0.031) * 14 + Math.cos(x * 0.0117) * 9;
+        ctx.lineTo(x, tear);
+      }
+      ctx.lineTo(ART_W, py - 120);
+      ctx.lineTo(0, py - 120);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    sunDisc(ctx, right - 78, m + 210, 46, "rgba(242,237,227,0.82)");
+
+    // The name sits over the top of the picture, which is what gives the cover
+    // its depth — type in front, portrait behind, one ground under both.
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = 26;
+    ctx.shadowOffsetY = 6;
     ctx.fillStyle = PAPER.stock;
-    setType(ctx, 148, 900, false, -4);
+    setType(ctx, 152, 900, false, -4);
     ctx.fillText("NESH", left, ART_H * 0.5);
+    ctx.fillText("VIDEO", left, ART_H * 0.5 + 142);
+    ctx.restore();
 
-    ctx.fillStyle = "rgba(242,237,227,0.42)";
-    ctx.fillText("VIDEO", left, ART_H * 0.5 + 138);
+    // Knocked back so the second word reads as a shadow of the first.
+    ctx.save();
+    ctx.globalCompositeOperation = "overlay";
+    ctx.fillStyle = "rgba(227,37,27,0.9)";
+    setType(ctx, 152, 900, false, -4);
+    ctx.fillText("VIDEO", left, ART_H * 0.5 + 142);
+    ctx.restore();
 
-    // The line that used to sit under the binder in HTML.
-    ctx.fillStyle = "rgba(242,237,227,0.92)";
-    setType(ctx, 30, 500);
-    paragraph(ctx, spec.intro, left, ART_H * 0.5 + 232, width * 0.86, 42);
+    rule(ctx, left, ART_H * 0.5 + 186, width * 0.42, 4, PAPER.gold);
 
-    rule(ctx, left, ART_H - m - 34, width, 3, onDark ? "rgba(242,237,227,0.5)" : PAPER.red);
+    ctx.fillStyle = "rgba(242,237,227,0.95)";
+    setType(ctx, 29, 600);
+    paragraph(ctx, spec.intro, left, ART_H * 0.5 + 248, width * 0.8, 40);
   } else if (spec.kind === "poster") {
     if (shots[0]) {
       const ph = ART_H * 0.52;
@@ -415,6 +466,16 @@ export function drawPage(
 
 // ------------------------------------------------------------------ wiring --
 
+/**
+ * The portrait on the cover.
+ *
+ * A local file rather than a CMS row: it is the one picture on the site that
+ * is not a piece of work, so it does not belong in the catalogue. Drop a
+ * replacement at this path and the cover takes it. If it is missing the cover
+ * falls back to type on flat red, which is what it was before.
+ */
+const COVER_PORTRAIT = "/media/portrait.jpg";
+
 /** Which page shows which section, and how it is printed. */
 const PLAN: Record<string, { slug: string; take: number; skip: number }> = {
   title: { slug: "", take: 0, skip: 0 },
@@ -470,7 +531,7 @@ function specFor(face: Face, pieces: PortfolioPiece[]): PageSpec {
     tail: chapter.tail,
     intro: chapter.intro,
     slug: plan.slug,
-    urls: rotated.slice(0, plan.take),
+    urls: face.layout.kind === "title" ? [COVER_PORTRAIT] : rotated.slice(0, plan.take),
   };
 }
 

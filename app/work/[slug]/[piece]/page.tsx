@@ -70,8 +70,8 @@ export default async function PiecePage({
           {chapter.tail}
         </Link>
         <h1 className="gallery__title">{found.title}</h1>
-        <Link href="/about" className="gallery__aside">
-          About
+        <Link href="/contact" className="gallery__aside">
+          Contact
         </Link>
       </header>
 

@@ -73,6 +73,9 @@ export function Nav() {
         <Link className="nav__aside" href="/about">
           About
         </Link>
+        <Link className="nav__aside" href="/contact">
+          Contact
+        </Link>
         <p className="nav__counter" aria-live="polite">
           <span className="nav__counter-now">{String(active).padStart(2, "0")}</span>
           <span className="nav__counter-rule" />

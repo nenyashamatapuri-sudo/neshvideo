@@ -52,8 +52,8 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
           {chapter.title}
           {chapter.tail}
         </h1>
-        <Link href="/about" className="gallery__aside">
-          About
+        <Link href="/contact" className="gallery__aside">
+          Contact
         </Link>
       </header>
 
