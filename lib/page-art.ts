@@ -184,6 +184,116 @@ function setType(
   ctx.letterSpacing = `${tracking}px`;
 }
 
+/**
+ * The display face, as next/font actually named it.
+ *
+ * Anton is already loaded for the masthead, but next/font hashes the family
+ * name at build time, so the only reliable way to reach it from canvas — which
+ * cannot read CSS variables — is to ask the document what the variable holds.
+ */
+function displayFamily(): string {
+  try {
+    const named = getComputedStyle(document.documentElement)
+      .getPropertyValue("--font-display")
+      .trim();
+    if (named) return `${named}, Impact, 'Haettenschweiler', sans-serif`;
+  } catch {
+    /* fall through */
+  }
+  return "Impact, 'Haettenschweiler', 'Arial Narrow', sans-serif";
+}
+
+/**
+ * Headline type, printed rather than rendered.
+ *
+ * White, with red pushed through it — the way a two-colour job goes slightly
+ * out of register and the second plate bleeds into the first. Three passes:
+ * a soft red halo behind the letters so they sit in the ink rather than on it,
+ * the white face itself, then red grain and a gradient laid *inside* the
+ * letterforms with `source-atop`, which is what keeps the texture on the type
+ * and off the page around it.
+ *
+ * Deliberately restrained. Grain at full strength reads as a filter; at this
+ * weight it reads as printing.
+ */
+function grungeHeadline(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  size: number
+) {
+  const font = `400 ${size}px ${displayFamily()}`;
+
+  ctx.save();
+  ctx.font = font;
+  ctx.letterSpacing = `${-size * 0.012}px`;
+  const w = ctx.measureText(text).width;
+  ctx.restore();
+
+  const pad = Math.ceil(size * 0.42);
+  const cw = Math.ceil(w + pad * 2);
+  const chh = Math.ceil(size * 1.5 + pad * 2);
+
+  const layer = document.createElement("canvas");
+  layer.width = cw;
+  layer.height = chh;
+  const lc = layer.getContext("2d");
+  if (!lc) return w;
+
+  lc.font = font;
+  lc.letterSpacing = `${-size * 0.012}px`;
+  lc.textBaseline = "alphabetic";
+  const baseline = pad + size;
+
+  // The white face.
+  lc.fillStyle = "#ffffff";
+  lc.fillText(text, pad, baseline);
+
+  // A vertical burn, kept light: the letters have to stay white. Enough red at
+  // the head and foot to look inked, nothing through the middle.
+  const grad = lc.createLinearGradient(0, pad, 0, pad + size);
+  grad.addColorStop(0, "rgba(178,26,18,0.30)");
+  grad.addColorStop(0.34, "rgba(227,37,27,0.05)");
+  grad.addColorStop(0.8, "rgba(227,37,27,0.04)");
+  grad.addColorStop(1, "rgba(150,22,16,0.22)");
+  lc.globalCompositeOperation = "source-atop";
+  lc.fillStyle = grad;
+  lc.fillRect(0, 0, cw, chh);
+
+  // Speckle. Deterministic, so the cover does not shimmer between loads.
+  let seed = text.length * 9301 + 49297;
+  const rand = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+  for (let i = 0; i < Math.round(cw * chh * 0.0013); i++) {
+    const r = rand();
+    lc.fillStyle = `rgba(${r > 0.5 ? 227 : 150},${r > 0.5 ? 37 : 22},${r > 0.5 ? 27 : 18},${
+      0.06 + rand() * 0.2
+    })`;
+    lc.fillRect(rand() * cw, rand() * chh, 1 + rand() * 2.6, 1 + rand() * 2);
+  }
+
+  // Separation, not glow.
+  //
+  // A red halo under white type sitting on a red band has nothing to separate
+  // against — it just fogs the edge, which is what made this read out of focus.
+  // A dark bleed does the job a drop shadow does on press: holds the letter off
+  // the ground without softening it.
+  ctx.save();
+  ctx.globalAlpha = 0.42;
+  ctx.filter = `blur(${Math.round(size * 0.05)}px)`;
+  ctx.fillStyle = "rgba(74,8,4,1)";
+  ctx.font = font;
+  ctx.letterSpacing = `${-size * 0.012}px`;
+  ctx.fillText(text, x, y + size * 0.03);
+  ctx.restore();
+
+  ctx.drawImage(layer, x - pad, y - baseline);
+  return w;
+}
+
 /** Wraps to the given width and returns how far down the text ran. */
 function paragraph(
   ctx: CanvasRenderingContext2D,
@@ -293,39 +403,32 @@ export function drawPage(
 
     sunDisc(ctx, right - 78, m + 210, 46, "rgba(242,237,227,0.82)");
 
-    // The name sits over the top of the picture, which is what gives the cover
-    // its depth — type in front, portrait behind, one ground under both.
+    // The name goes in the red band above the tear, not over the picture.
     //
-    // Where it sits is the whole job. Centred vertically it lands across the
-    // face, and a cover that crops its subject out with its own headline is a
-    // worse cover than one with no picture at all. Dropped to here the words
-    // run over the shirt and the floor, which carry no detail worth keeping,
-    // and the face stays clear above them.
-    const nameTop = ART_H * 0.585;
+    // Sitting it on the photograph meant choosing between covering the face and
+    // crowding the foot of the page. The band overhead is flat colour doing
+    // nothing, and putting the title there gives the cover the order a printed
+    // one has: name at the top, picture beneath it, the line last.
+    // Sized to fill the band: the second line has to clear the torn edge, which
+    // wobbles up to 23px above where it nominally sits.
+    const NAME_SIZE = 142;
+    const nameTop = m + 138;
+
+    grungeHeadline(ctx, "NESH", left, nameTop, NAME_SIZE);
+    grungeHeadline(ctx, "VIDEO", left, nameTop + NAME_SIZE * 0.92, NAME_SIZE);
+
+    // The rule and the line stay down on the photograph, where there is room
+    // for them and nothing to fight with.
+    const blurbTop = ART_H * 0.77;
+    rule(ctx, left, blurbTop, width * 0.42, 4, PAPER.gold);
 
     ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.45)";
-    ctx.shadowBlur = 26;
-    ctx.shadowOffsetY = 6;
-    ctx.fillStyle = PAPER.stock;
-    setType(ctx, 152, 900, false, -4);
-    ctx.fillText("NESH", left, nameTop);
-    ctx.fillText("VIDEO", left, nameTop + 142);
-    ctx.restore();
-
-    // Knocked back so the second word reads as a shadow of the first.
-    ctx.save();
-    ctx.globalCompositeOperation = "overlay";
-    ctx.fillStyle = "rgba(227,37,27,0.9)";
-    setType(ctx, 152, 900, false, -4);
-    ctx.fillText("VIDEO", left, nameTop + 142);
-    ctx.restore();
-
-    rule(ctx, left, nameTop + 186, width * 0.42, 4, PAPER.gold);
-
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 18;
     ctx.fillStyle = "rgba(242,237,227,0.95)";
     setType(ctx, 29, 600);
-    paragraph(ctx, spec.intro, left, nameTop + 248, width * 0.8, 40);
+    paragraph(ctx, spec.intro, left, blurbTop + 56, width * 0.8, 40);
+    ctx.restore();
   } else if (spec.kind === "poster") {
     if (shots[0]) {
       const ph = ART_H * 0.52;
