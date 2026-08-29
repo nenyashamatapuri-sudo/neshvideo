@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 
-import { SPREAD_COUNT } from "@/lib/spreads";
+import { SECTIONS, SPREAD_COUNT } from "@/lib/spreads";
 import { SCROLL_TAIL, startScrollTracking } from "@/lib/scroll";
 import { Intro } from "./Intro";
 import { Nav } from "./overlay/Nav";
@@ -21,6 +22,22 @@ const BinderCanvas = dynamic(
 
 export function HomeExperience() {
   const [ready, setReady] = useState(false);
+  const router = useRouter();
+
+  /**
+   * Clicking the open spread goes to the section it is showing.
+   *
+   * Spread 0 is the cover, which stands for no section — clicking it turns to
+   * the first one instead, which is what somebody prodding the cover of a book
+   * is asking for.
+   */
+  const openSpread = useCallback(
+    (spread: number) => {
+      const section = SECTIONS[Math.max(0, spread - 1)];
+      if (section) router.push(section.href);
+    },
+    [router]
+  );
 
   useEffect(() => {
     const stop = startScrollTracking();
@@ -37,7 +54,7 @@ export function HomeExperience() {
       <Intro />
       {/* Pinned stage: nothing in here scrolls, it responds to scroll. */}
       <div className="stage">
-        <BinderCanvas />
+        <BinderCanvas onOpen={openSpread} />
         <div className="rules" aria-hidden="true" />
         <div className="overlay">
           <Nav />

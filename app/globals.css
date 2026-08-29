@@ -2039,3 +2039,402 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
     transform: none;
   }
 }
+
+/* ==========================================================================
+   THE IN-PAGE VIEWER
+   A tile opens where it stands. Nothing navigates, so closing puts the reader
+   back on the same page at the same scroll position.
+   ========================================================================== */
+
+.shot__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+  cursor: pointer;
+}
+
+/* figcaption became a span when the tile became a button — a <figcaption>
+   outside a <figure> is not valid, and a button may not contain one. */
+.shot__cap {
+  display: grid;
+  justify-items: center;
+  gap: 0.15rem;
+  padding-top: 0.9rem;
+  text-align: center;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+/* The frame lifts a little on approach, so a tile reads as something that
+   opens rather than something printed on the page. */
+.shot__frame {
+  transition: transform 420ms var(--ease), box-shadow 420ms var(--ease);
+}
+.shot__open:hover .shot__frame,
+.shot__open:focus-visible .shot__frame {
+  transform: translateY(-6px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--paper) 30%, transparent),
+    0 18px 40px -18px rgba(0, 0, 0, 0.9);
+}
+.shot__open:focus-visible .shot__frame {
+  outline: 2px solid var(--red);
+  outline-offset: 3px;
+}
+.shot__open:hover .shot__title {
+  color: var(--red);
+}
+
+/* How many stills are behind this one. */
+.shot__count {
+  position: absolute;
+  left: 0.7rem;
+  bottom: 0.7rem;
+  padding: 0.15rem 0.42rem;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--ink) 74%, transparent);
+  backdrop-filter: blur(3px);
+  color: var(--paper);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* ---------------------------------------------------------------- shell -- */
+
+.viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: clamp(0.5rem, 1.5vw, 1.25rem);
+  padding: clamp(0.75rem, 2.5vw, 1.75rem);
+  background: color-mix(in srgb, #0a0908 95%, transparent);
+  backdrop-filter: blur(10px);
+  animation: viewer-in 240ms var(--ease);
+  cursor: zoom-out;
+}
+
+@keyframes viewer-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.viewer__bar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+  cursor: default;
+}
+
+.viewer__id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.9rem;
+  margin: 0;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.55rem, 0.7vw, 0.68rem);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.viewer__title {
+  color: var(--paper);
+  font-weight: 700;
+}
+.viewer__client {
+  color: var(--paper-dim);
+}
+.viewer__agency {
+  color: var(--gold);
+}
+
+/* ---------------------------------------------------------------- stage -- */
+
+.viewer__stage {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: default;
+}
+
+.viewer__still {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.viewer__poster,
+.viewer__player {
+  position: relative;
+  width: min(100%, calc((100vh - 12rem) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  max-height: 100%;
+  border: 3px solid #0a0908;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--paper) 16%, transparent);
+  background: var(--ink-2);
+}
+.viewer__poster {
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+.viewer__poster img {
+  transition: opacity 400ms var(--ease);
+}
+.viewer__poster:hover img {
+  opacity: 0.72;
+}
+
+.viewer__empty {
+  color: var(--paper-dim);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* -------------------------------------------------------------- controls -- */
+
+.viewer__prev,
+.viewer__next,
+.viewer__close {
+  display: grid;
+  place-items: center;
+  width: 2.8rem;
+  height: 2.8rem;
+  padding: 0;
+  border: 1px solid var(--rule);
+  background: transparent;
+  color: var(--paper);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 240ms var(--ease), color 240ms var(--ease);
+}
+.viewer__prev:hover,
+.viewer__next:hover,
+.viewer__close:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+.viewer__prev {
+  grid-column: 1;
+  grid-row: 2;
+}
+.viewer__next {
+  grid-column: 3;
+  grid-row: 2;
+}
+.viewer__close {
+  flex: none;
+}
+
+/* --------------------------------------------------------------- footer -- */
+
+.viewer__foot {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule);
+  cursor: default;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.5rem, 0.62vw, 0.6rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.viewer__caption {
+  flex: 1;
+  min-width: 0;
+  color: var(--paper-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.viewer__count {
+  flex: none;
+  color: var(--gold);
+}
+.viewer__link {
+  flex: none;
+  color: var(--paper-dim);
+  transition: color 240ms var(--ease);
+}
+.viewer__link:hover {
+  color: var(--red);
+}
+
+@media (max-width: 620px) {
+  .viewer {
+    grid-template-columns: 1fr;
+  }
+  .viewer__stage {
+    grid-column: 1;
+  }
+  .viewer__prev,
+  .viewer__next {
+    grid-row: 3;
+    align-self: center;
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+  .viewer__prev {
+    grid-column: 1;
+    justify-self: start;
+  }
+  .viewer__next {
+    grid-column: 1;
+    justify-self: end;
+  }
+  .viewer__foot {
+    grid-row: 4;
+  }
+  .viewer__caption {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewer {
+    animation: none;
+  }
+  .shot__open:hover .shot__frame {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   THE BINDER, AS SOMETHING YOU CAN OPERATE
+   The 3D pages give no affordances of their own, so every invitation to touch
+   the thing has to be made in the overlay.
+   ========================================================================== */
+
+/* A section name lifts off the bar on approach, so it reads as a way in
+   rather than as a label for the spread you are already on. */
+.nav__links a {
+  transform-origin: 50% 100%;
+  transition:
+    color 260ms var(--ease),
+    transform 320ms var(--ease),
+    letter-spacing 320ms var(--ease);
+}
+.nav__links a:hover,
+.nav__links a:focus-visible {
+  transform: translateY(-3px);
+  letter-spacing: 0.19em;
+}
+.nav__links a:hover .nav__name,
+.nav__links a:focus-visible .nav__name {
+  text-shadow: 0 6px 18px color-mix(in srgb, var(--red) 55%, transparent);
+}
+.nav__links a:focus-visible {
+  outline: 1px solid var(--red);
+  outline-offset: 6px;
+}
+
+/* The number swings up to meet it — the binder is numbered, and the bar
+   should feel bolted to the same mechanism. */
+.nav__no {
+  display: inline-block;
+  transition: opacity 260ms var(--ease), transform 320ms var(--ease);
+}
+.nav__links a:hover .nav__no {
+  transform: translateY(-2px) scale(1.12);
+}
+
+/* ----------------------------------------------------------- scroll hint -- */
+
+/* Now a button: saying "scroll to turn" to somebody who has not realised the
+   binder moves is worth little if the words do not themselves turn it. */
+.hint {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0.4rem 0;
+  font: inherit;
+  cursor: pointer;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: clamp(0.55rem, 0.68vw, 0.66rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.hint:hover {
+  color: var(--paper);
+}
+
+.hint__say {
+  display: grid;
+  gap: 0.2rem;
+  text-align: right;
+}
+
+/* How much there is to get through. Without a number, "scroll" could mean
+   one more screen or twenty. */
+.hint__count {
+  color: var(--gold);
+  font-size: 0.86em;
+  opacity: 0.85;
+}
+
+/* A chevron that keeps nodding downward until the reader takes the hint. */
+.hint__chev {
+  display: block;
+  width: 0.62rem;
+  height: 0.62rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  animation: hint-nod 2.4s var(--ease) infinite;
+}
+.hint:hover .hint__chev {
+  animation-play-state: paused;
+}
+
+@keyframes hint-nod {
+  0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.45; }
+  50% { transform: rotate(45deg) translate(0.18rem, 0.18rem); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint__chev,
+  .hint__rule {
+    animation: none;
+  }
+  .nav__links a:hover {
+    transform: none;
+    letter-spacing: 0.14em;
+  }
+}

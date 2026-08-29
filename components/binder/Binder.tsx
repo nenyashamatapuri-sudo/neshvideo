@@ -86,13 +86,24 @@ function Boards() {
   );
 }
 
-export function Binder() {
+export function Binder({ onOpen }: { onOpen?: (spread: number) => void }) {
   const group = useRef<THREE.Group>(null);
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
   const viewport = useThree((s) => s.size);
+  const canvas = useThree((s) => s.gl.domElement);
   // Per-sheet turn amounts, written once per frame and read by every Sheet.
   const turns = useRef<number[]>(SHEETS.map(() => 0));
   const active = useRef(0);
+  // Hover lives in a ref rather than state: the render loop reads it every
+  // frame, and a re-render here would rebuild every sheet's material.
+  const hovered = useRef(false);
+
+  const setHover = (on: boolean) => {
+    hovered.current = on;
+    // The 3D layer has no affordances of its own, so the cursor carries the
+    // whole message that the spread can be opened.
+    canvas.style.cursor = on ? "pointer" : "";
+  };
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 1 / 30); // survive tab-out without a lurch
@@ -146,6 +157,14 @@ export function Binder() {
       3,
       dt
     );
+
+    // Under the pointer the spread comes forward and squares up to the reader,
+    // the way you would pull a book toward you before opening it.
+    const lift = hovered.current ? 1 : 0;
+    group.current.position.z = damp(group.current.position.z, lift * 0.085, 6, dt);
+    group.current.scale.setScalar(
+      damp(group.current.scale.x, 1 + lift * 0.018, 6, dt)
+    );
   });
 
   return (
@@ -155,6 +174,29 @@ export function Binder() {
       {SHEETS.map((sheet, i) => (
         <Sheet key={sheet.front.id} data={sheet} index={i} turnRef={turns} activeRef={active} />
       ))}
+
+      {/*
+       * The hit target. The sheets themselves are turning, curling and
+       * alpha-tested, which makes them poor things to raycast against — a
+       * pointer would flicker between them mid-turn and drop through the ring
+       * holes. One invisible plane across the whole spread is steady, and the
+       * reader cannot tell the difference.
+       */}
+      <mesh
+        position={[0, 0, 0.12]}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setHover(true);
+        }}
+        onPointerOut={() => setHover(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpen?.(Math.round(active.current));
+        }}
+      >
+        <planeGeometry args={[PAGE_W * 2.05, PAGE_H * 1.02]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
     </group>
   );
 }

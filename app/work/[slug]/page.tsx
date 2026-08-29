@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { chapterBySlug, SECTIONS } from "@/lib/spreads";
 import { Stamp, Star } from "@/components/Ornament";
 import { getPortfolioPiecesByCategory } from "@/lib/portfolio-client";
-import { RHYTHM } from "@/lib/rhythm";
-import { vimeoId } from "@/lib/supabase";
+import SectionGallery from "@/components/SectionGallery";
 
 /** Revalidate every 60 seconds to pick up new portfolio pieces */
 export const revalidate = 60;
@@ -64,68 +62,7 @@ export default async function SectionPage({ params }: { params: Promise<{ slug: 
       {pieces.length === 0 ? (
         <p className="gallery__empty">This section is being hung. Check back shortly.</p>
       ) : (
-        <ul className="gallery__grid">
-          {pieces.map((piece, i) => {
-            // The layout rhythm is the site's, not the database's: frames vary
-            // in width and hang at different heights so a row never reads as a
-            // grid. Without these the tiles collapse to one column each.
-            const beat = RHYTHM[i % RHYTHM.length];
-            const style = {
-              "--span": beat.span,
-              "--drop": beat.drop,
-              "--aspect": beat.aspect,
-            } as React.CSSProperties;
-
-            const caption = (
-              <figcaption>
-                <span className="shot__title">{piece.title}</span>
-                {piece.client && <span className="shot__client">{piece.client}</span>}
-                {piece.agency && <span className="shot__agency">{piece.agency}</span>}
-              </figcaption>
-            );
-
-            const frame = (
-              <figure className="shot__frame">
-                {piece.image_url ? (
-                  <Image
-                    src={piece.image_url}
-                    alt={piece.title}
-                    fill
-                    sizes="(max-width: 560px) 50vw, (max-width: 900px) 33vw, 25vw"
-                    style={{ objectFit: "cover" }}
-                  />
-                ) : (
-                  <span className="shot__blank" aria-hidden="true" />
-                )}
-                {vimeoId(piece.vimeo_url) && (
-                  <span className="shot__play" aria-hidden="true" />
-                )}
-              </figure>
-            );
-
-            // A piece with nothing behind it yet is announced, not linked.
-            if (piece.coming_soon) {
-              return (
-                <li className="shot shot--soon" key={piece.id} style={style}>
-                  {frame}
-                  <figcaption>
-                    <span className="shot__title">{piece.title}</span>
-                    <span className="shot__client">Coming soon</span>
-                  </figcaption>
-                </li>
-              );
-            }
-
-            return (
-              <li className="shot" key={piece.id} style={style}>
-                <Link href={`/work/${slug}/${piece.slug}`} className="shot__link">
-                  {frame}
-                  {caption}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+        <SectionGallery pieces={pieces} section={slug} />
       )}
 
       <nav className="gallery__foot" aria-label="Other sections">

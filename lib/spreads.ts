@@ -170,7 +170,7 @@ export const CHAPTERS: Chapter[] = [
     kicker: "Portfolio — Vol. 01",
     title: "NESH",
     tail: "VIDEO",
-    intro: "Director, photographer and videographer.",
+    intro: "Director / Photographer / Videographer based in Amsterdam.",
     blurb:
       "Videographer at Wieden + Kennedy, freelance director and photographer. Four sections — directing, photography, videography and production.",
     stats: ["Four sections", "Amsterdam", "Available worldwide"],

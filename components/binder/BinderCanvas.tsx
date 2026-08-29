@@ -12,8 +12,12 @@ import { StudioEnvironment } from "./Environment";
  * The 3D layer. Deliberately holds no React state — everything it animates is
  * read from the scroll store inside the render loop, so this subtree mounts
  * once and never re-renders.
+ *
+ * `onOpen` is the one thing that goes back out: the spread the reader clicked,
+ * which the shell turns into a route. Keeping the router out of here means the
+ * canvas subtree still never re-renders.
  */
-export function BinderCanvas() {
+export function BinderCanvas({ onOpen }: { onOpen?: (spread: number) => void }) {
   return (
     <div className="canvas-layer" aria-hidden="true">
       <Canvas
@@ -47,7 +51,7 @@ export function BinderCanvas() {
         <ambientLight intensity={0.3} />
 
         <Suspense fallback={null}>
-          <Binder />
+          <Binder onOpen={onOpen} />
         </Suspense>
         <DevBridge />
       </Canvas>

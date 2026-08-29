@@ -85,23 +85,39 @@ export function Stamp({
 
 /**
  * The two cameras the work is actually made on: a Mamiya RZ67 for the stills
- * and an Arriflex SR3 for the motion. Drawn in side profile, which is the view
- * that makes each unmistakable — the RZ by its waist-level hood and slab body,
- * the SR by the coaxial magazine sitting proud on top.
+ * and an Arriflex 16SR3 for the motion.
  *
- * Silhouettes only. At the size these run they are read as shapes, not
- * diagrams, so detail past the outline is wasted.
+ * Each is drawn from the view that makes it unmistakable, which is not the same
+ * view for both. The RZ is a front elevation — a square slab with the lens
+ * throat punched clean through it and a focus knob standing out either side;
+ * nothing else is shaped like that. The SR is a side elevation, because the
+ * whole character of the camera is the coaxial magazine sitting proud above the
+ * body, and face-on you would lose it entirely.
+ *
+ * They are marks rather than diagrams: the throat and the magazine hub are cut
+ * out with `evenodd` so the ground shows through, which keeps both legible at
+ * the size these actually run and lets the paper stock read as part of the
+ * drawing. Everything is one colour, so they invert cleanly.
  */
 export function MamiyaRZ67({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 120 100" aria-hidden="true">
       <g fill="currentColor">
-        <path d="M44 28 L49 7 H79 L84 28 Z" />
-        <rect x="32" y="27" width="60" height="53" rx="3" />
-        <rect x="92" y="32" width="21" height="42" rx="2" />
-        <rect x="12" y="39" width="21" height="28" rx="2" />
-        <rect x="5" y="35" width="8" height="36" rx="2" />
-        <circle cx="104" cy="28" r="5.5" />
+        {/* Nameplate across the prism, and the body under it — with the lens
+            throat punched through both. */}
+        <rect x="37" y="6" width="46" height="11" rx="2.5" />
+        <path
+          fillRule="evenodd"
+          d="M28 19h64a4 4 0 0 1 4 4v58a4 4 0 0 1-4 4H28a4 4 0 0 1-4-4V23a4 4 0 0 1 4-4Zm32 8a25 25 0 1 0 0 50 25 25 0 0 0 0-50Z"
+        />
+        {/* The bayonet ring, then the glass. */}
+        <circle cx="60" cy="52" r="21.5" fill="none" stroke="currentColor" strokeWidth="2.4" />
+        <circle cx="60" cy="52" r="15" />
+        {/* Focus knobs, one either side — the RZ's most obvious tell. */}
+        <rect x="6" y="60" width="19" height="22" rx="4" />
+        <rect x="95" y="60" width="19" height="22" rx="4" />
+        {/* Shutter release. */}
+        <circle cx="60" cy="23.5" r="2.6" />
       </g>
     </svg>
   );
@@ -111,14 +127,24 @@ export function ArriflexSR3({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 120 100" aria-hidden="true">
       <g fill="currentColor">
-        <circle cx="72" cy="35" r="26" />
-        <rect x="30" y="47" width="64" height="34" rx="6" />
-        <rect x="10" y="53" width="21" height="21" rx="2" />
-        <rect x="3" y="49" width="8" height="29" rx="2" />
-        <path d="M94 56 L115 50 L115 67 L94 71 Z" />
-        <rect x="50" y="3" width="38" height="8" rx="4" />
-        <rect x="53" y="9" width="6" height="9" />
-        <rect x="79" y="9" width="6" height="9" />
+        {/* Carry handle. */}
+        <rect x="44" y="4" width="42" height="7" rx="3.5" />
+        <rect x="47" y="9" width="6" height="10" />
+        <rect x="77" y="9" width="6" height="10" />
+        {/* The magazine — the shape that says SR before anything else does.
+            Its hub is cut out so the disc reads as a film spool. */}
+        <path
+          fillRule="evenodd"
+          d="M74 15a29 29 0 1 1 0 58 29 29 0 0 1 0-58Zm0 22a7 7 0 1 0 0 14 7 7 0 0 0 0-14Z"
+        />
+        {/* Body, and the flat run of the electronics panel along its base. */}
+        <rect x="30" y="46" width="66" height="32" rx="5" />
+        <rect x="38" y="72" width="58" height="12" rx="2" />
+        {/* Eyepiece on its arm, swung out to the operator's side. */}
+        <rect x="16" y="30" width="12" height="26" rx="5" />
+        <rect x="6" y="34" width="12" height="18" rx="4" />
+        {/* Lens port. */}
+        <rect x="22" y="52" width="10" height="20" rx="2" />
       </g>
     </svg>
   );
