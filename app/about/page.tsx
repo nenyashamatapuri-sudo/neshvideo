@@ -3,7 +3,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ABOUT } from "@/lib/about";
-import { frameSrc } from "@/lib/spreads";
 import { Signature } from "@/components/Signature";
 import { Stamp, SunDisc } from "@/components/Ornament";
 
@@ -47,14 +46,14 @@ export default function AboutPage() {
         {/* Prints laid down one over another, taped to the page. */}
         <div className="about__collage">
           {ABOUT.collage.map((shot, i) => (
-            <figure key={shot.id} className={`snap snap--${i + 1}`}>
+            <figure key={shot.src} className={`snap snap--${i + 1}`}>
               <span className="snap__tape" aria-hidden="true" />
               <span className="snap__frame">
                 <Image
-                  src={frameSrc(shot.id)}
+                  src={shot.src}
                   alt={shot.caption}
-                  width={1000}
-                  height={700}
+                  width={shot.width}
+                  height={shot.height}
                   sizes="(max-width: 900px) 90vw, 40vw"
                   priority={i === 0}
                 />

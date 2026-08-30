@@ -43,10 +43,32 @@ export const ABOUT = {
 
   clients: ["Nike", "Zalando", "Corona", "Triumph", "Trainline", "Philips"],
 
-  /** The three stills in the collage, with their handwritten captions. */
+  /**
+   * The three stills in the collage, with their handwritten captions.
+   *
+   * Real photographs rather than generated frames, so their own proportions
+   * have to travel with them — the portrait is nearly square and the other two
+   * are 3:2, and next/image needs to know that to reserve the right space.
+   * First in the list sits on top of the pile.
+   */
   collage: [
-    { id: "about-1", caption: "Amsterdam, 2026" },
-    { id: "about-2", caption: "On location" },
-    { id: "about-3", caption: "Contact sheet, 6×7" },
+    {
+      src: "/media/about/portrait.jpg",
+      caption: "On set, Amsterdam",
+      width: 1716,
+      height: 1800,
+    },
+    {
+      src: "/media/about/journey.jpg",
+      caption: "On location",
+      width: 1800,
+      height: 1199,
+    },
+    {
+      src: "/media/about/motorcycles.jpg",
+      caption: "Indian Motorcycles",
+      width: 1800,
+      height: 1199,
+    },
   ],
 } as const;

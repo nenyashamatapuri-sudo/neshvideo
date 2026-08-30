@@ -779,8 +779,17 @@ stroke='%23e9a733' stroke-width='2.4' stroke-linecap='square'/></svg>");
   aspect-ratio: 10 / 7;
   background: var(--ink-2);
 }
+/*
+ * The frames follow the photographs, not the other way round. The portrait on
+ * top is all but square, and the night shot at the bottom is landscape and
+ * needs its width — cropping it to a tall box loses the road the bike is
+ * sitting on, which is most of the picture.
+ */
+.snap--1 .snap__frame {
+  aspect-ratio: 1 / 1;
+}
 .snap--3 .snap__frame {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 3 / 2;
 }
 .snap__frame img {
   width: 100%;
