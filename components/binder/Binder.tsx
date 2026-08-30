@@ -137,13 +137,11 @@ export function Binder({
       6.5,
       dt
     );
-    // On a phone the masthead owns the bottom third, so lift the page clear.
-    group.current.position.y = damp(
-      group.current.position.y,
-      singlePage ? BINDER_Y + 0.14 : BINDER_Y,
-      5,
-      dt
-    );
+    // The lift exists to clear the masthead, which sits across the lower third
+    // on a wide screen. A phone has no masthead under it any more — the page is
+    // the whole view — so it centres instead, and the dead band the lift used to
+    // leave at the bottom goes with it.
+    group.current.position.y = damp(group.current.position.y, singlePage ? 0 : BINDER_Y, 5, dt);
 
     // Dolly so the spread always fits, whatever the viewport. The camera eases
     // back as the binder opens out from one page to two.
