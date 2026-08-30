@@ -1,0 +1,76 @@
+<!--
+  Nesh — email signature.
+
+  Written the way email actually renders rather than the way the site is built:
+  nested tables, inline styles, explicit width and height on the image, and no
+  web fonts. Gmail strips <style> blocks, Outlook renders through Word, and
+  neither has ever heard of flexbox — so everything here is deliberately old.
+
+  The ground is near-black rather than the site's red. A saturated red block the
+  width of a reply reads as shouting in a thread, and it survives dark mode
+  badly; keeping the card dark and spending the red on the wordmark and the
+  links gives the same identity at the volume a signature should be.
+
+  The picture is served from Supabase, not from the site, because a signature
+  outlives any one deploy and mail clients cache the first thing they fetch.
+
+  TO USE: open this file in a browser, select the whole card, copy, and paste
+  into Gmail Settings → Signature (or Mail → Preferences → Signatures).
+-->
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+  <tr>
+    <td style="padding:0;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="468" style="border-collapse:collapse;width:468px;background-color:#100e0d;">
+        <tr>
+          <!-- Red spine: the one piece of flat colour, doing the job the
+               chevron band does on the binder. -->
+          <td width="5" style="width:5px;background-color:#e3251b;font-size:0;line-height:0;">&nbsp;</td>
+
+          <!-- Portrait -->
+          <td width="128" style="width:128px;padding:16px 0 16px 16px;vertical-align:top;">
+            <img
+              src="https://thvhgbrtyexhggjklmfh.supabase.co/storage/v1/object/public/portfolio/brand/signature-portrait.jpg"
+              width="120"
+              height="150"
+              alt="Nesh"
+              style="display:block;width:120px;height:150px;border:0;outline:none;text-decoration:none;background-color:#100e0d;"
+            />
+          </td>
+
+          <!-- Details -->
+          <td style="padding:18px 18px 18px 16px;vertical-align:top;font-family:Helvetica,Arial,sans-serif;">
+
+            <!-- Wordmark. Impact is the closest thing to Anton that ships on
+                 both Windows and macOS; the stack falls back through the
+                 condensed faces before giving up on Arial Black. -->
+            <div style="font-family:Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',Helvetica,sans-serif;font-size:30px;line-height:28px;letter-spacing:0.4px;color:#f2ede3;text-transform:uppercase;">
+              Nesh<span style="color:#e3251b;">video</span>
+            </div>
+
+            <!-- Gold hairline, as on the cover. -->
+            <div style="width:56px;height:3px;background-color:#e9a733;font-size:0;line-height:0;margin:9px 0 10px 0;">&nbsp;</div>
+
+            <div style="font-family:Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#f2ede3;font-weight:bold;">
+              Director / Photographer / Videographer
+            </div>
+
+            <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;line-height:17px;color:#948b86;padding-top:2px;">
+              Videographer at Wieden&nbsp;+&nbsp;Kennedy &nbsp;·&nbsp; Amsterdam
+            </div>
+
+            <!-- Contact. Mail clients underline and recolour bare links, so
+                 every anchor states its own colour and decoration. -->
+            <div style="font-family:Helvetica,Arial,sans-serif;font-size:11px;line-height:19px;padding-top:11px;">
+              <a href="mailto:nenyashamatapuri@gmail.com" style="color:#f2ede3;text-decoration:none;">nenyashamatapuri@gmail.com</a>
+              <br />
+              <a href="https://neshvideo.netlify.app" style="color:#e3251b;text-decoration:none;font-weight:bold;">neshvideo.netlify.app</a>
+              <span style="color:#4a4340;">&nbsp;·&nbsp;</span>
+              <a href="https://www.instagram.com/neshvideo_" style="color:#948b86;text-decoration:none;">@neshvideo_</a>
+            </div>
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
