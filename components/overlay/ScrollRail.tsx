@@ -1,19 +1,10 @@
 "use client";
 
-import Link from "next/link";
-
 import { CHAPTERS, SPREAD_COUNT } from "@/lib/spreads";
 import { jumpToSpread } from "@/lib/scroll";
 import { useActiveSpread } from "./useActiveSpread";
 
-/**
- * Section rail down the right edge — position, and a way to skip ahead.
- *
- * It carries About and Contact as well now. The bar across the top of the
- * homepage is gone on a wide screen, and those two were the only things in it
- * that the rail did not already say; without them here they would have no way
- * in at all.
- */
+/** Section rail down the right edge — position, and a way to skip ahead. */
 export function ScrollRail() {
   const active = useActiveSpread();
 
@@ -33,11 +24,6 @@ export function ScrollRail() {
           </li>
         ))}
       </ul>
-
-      <div className="rail__aside">
-        <Link href="/about">About</Link>
-        <Link href="/contact">Contact</Link>
-      </div>
     </nav>
   );
 }
