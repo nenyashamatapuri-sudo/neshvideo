@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { RHYTHM } from "@/lib/rhythm";
 import { vimeoId, type PortfolioPiece } from "@/lib/supabase";
@@ -25,8 +26,14 @@ function slidesFor(piece: PortfolioPiece): Slide[] {
       : [];
 
   return [
-    ...(film ? ([{ kind: "film", id: film, poster: piece.image_url }] as Slide[]) : []),
-    ...stills.map((s): Slide => ({ kind: "still", url: s.url, caption: s.caption })),
+    ...(film
+      ? ([{ kind: "film", id: film, poster: piece.image_url }] as Slide[])
+      : []),
+    ...stills.map((s): Slide => ({
+      kind: "still",
+      url: s.url,
+      caption: s.caption,
+    })),
   ];
 }
 
@@ -54,7 +61,11 @@ export default function SectionGallery({
   // the thumb frame by frame — that following is the whole point.
   const [drag, setDrag] = useState(0);
   const [settling, setSettling] = useState(false);
-  const gesture = useRef<{ x: number; y: number; locked: null | "x" | "y" } | null>(null);
+  const gesture = useRef<{
+    x: number;
+    y: number;
+    locked: null | "x" | "y";
+  } | null>(null);
 
   const piece = openAt === null ? null : pieces[openAt];
   const slides = piece ? slidesFor(piece) : [];
@@ -75,9 +86,11 @@ export default function SectionGallery({
   const step = useCallback(
     (by: number) => {
       setPlaying(false);
-      setSlide((n) => (slides.length ? (n + by + slides.length) % slides.length : 0));
+      setSlide((n) =>
+        slides.length ? (n + by + slides.length) % slides.length : 0,
+      );
     },
-    [slides.length]
+    [slides.length],
   );
 
   /**
@@ -111,7 +124,8 @@ export default function SectionGallery({
     if (g.locked !== "x") return;
 
     // Resistance at the two ends, so the gallery says where it stops.
-    const atEnd = (dx > 0 && slide === 0) || (dx < 0 && slide === slides.length - 1);
+    const atEnd =
+      (dx > 0 && slide === 0) || (dx < 0 && slide === slides.length - 1);
     setDrag(atEnd ? dx * 0.32 : dx);
   };
 
@@ -145,7 +159,7 @@ export default function SectionGallery({
       setSlide(0);
       setPlaying(false);
     },
-    [pieces]
+    [pieces],
   );
 
   useEffect(() => {
@@ -196,7 +210,9 @@ export default function SectionGallery({
               ) : (
                 <span className="shot__blank" aria-hidden="true" />
               )}
-              {vimeoId(p.vimeo_url) && <span className="shot__play" aria-hidden="true" />}
+              {vimeoId(p.vimeo_url) && (
+                <span className="shot__play" aria-hidden="true" />
+              )}
               {p.images.length > 1 && (
                 <span className="shot__count" aria-hidden="true">
                   {p.images.length}
@@ -241,131 +257,165 @@ export default function SectionGallery({
         })}
       </ul>
 
-      {piece && (
-        <div
-          className="viewer"
-          role="dialog"
-          aria-modal="true"
-          aria-label={piece.title}
-          onClick={close}
-        >
-          <header className="viewer__bar" onClick={(e) => e.stopPropagation()}>
-            <p className="viewer__id">
-              <span className="viewer__title">{piece.title}</span>
-              {piece.client && <span className="viewer__client">{piece.client}</span>}
-              {piece.agency && <span className="viewer__agency">{piece.agency}</span>}
-            </p>
-            <button type="button" className="viewer__close" onClick={close} aria-label="Close">
-              ×
-            </button>
-          </header>
+      {/*
+        Rendered into <body> rather than in place.
 
-          {slides.length > 1 && (
-            <button
-              type="button"
-              className="viewer__prev"
-              onClick={(e) => {
-                e.stopPropagation();
-                step(-1);
-              }}
-              aria-label="Previous"
-            >
-              ‹
-            </button>
-          )}
-
+        The section's arrival animation puts a transform on .gallery, and any
+        transform — even the identity matrix a finished animation leaves behind —
+        makes that element the containing block for `position: fixed` children.
+        The viewer was therefore pinning itself to the top of the article instead
+        of the viewport, so opening a film from halfway down the page put it off
+        screen with no way to scroll to it. Portalling past the transform is the
+        fix that stays fixed, whatever gets animated later.
+      */}
+      {typeof document !== "undefined" &&
+        piece &&
+        createPortal(
           <div
-            className={`viewer__stage${settling ? " is-settling" : ""}`}
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={() => {
-              gesture.current = null;
-              setSettling(true);
-              setDrag(0);
-            }}
-            onTransitionEnd={() => setSettling(false)}
-            style={
-              {
-                transform: `translate3d(${drag}px, 0, 0)`,
-                // Falls away as the drag grows, so the picture lets go of the
-                // page a little before it is replaced.
-                opacity: 1 - Math.min(0.4, Math.abs(drag) / 900),
-              } as React.CSSProperties
-            }
+            className="viewer"
+            role="dialog"
+            aria-modal="true"
+            aria-label={piece.title}
+            onClick={close}
           >
-            {current?.kind === "film" ? (
-              playing ? (
-                <iframe
-                  className="viewer__player"
-                  src={`https://player.vimeo.com/video/${current.id}?autoplay=1&title=0&byline=0&portrait=0`}
-                  title={piece.title}
-                  allow="autoplay; fullscreen; picture-in-picture"
-                  allowFullScreen
+            <header
+              className="viewer__bar"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <p className="viewer__id">
+                <span className="viewer__title">{piece.title}</span>
+                {piece.client && (
+                  <span className="viewer__client">{piece.client}</span>
+                )}
+                {piece.agency && (
+                  <span className="viewer__agency">{piece.agency}</span>
+                )}
+              </p>
+              <button
+                type="button"
+                className="viewer__close"
+                onClick={close}
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </header>
+
+            {slides.length > 1 && (
+              <button
+                type="button"
+                className="viewer__prev"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  step(-1);
+                }}
+                aria-label="Previous"
+              >
+                ‹
+              </button>
+            )}
+
+            <div
+              className={`viewer__stage${settling ? " is-settling" : ""}`}
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerCancel={() => {
+                gesture.current = null;
+                setSettling(true);
+                setDrag(0);
+              }}
+              onTransitionEnd={() => setSettling(false)}
+              style={
+                {
+                  transform: `translate3d(${drag}px, 0, 0)`,
+                  // Falls away as the drag grows, so the picture lets go of the
+                  // page a little before it is replaced.
+                  opacity: 1 - Math.min(0.4, Math.abs(drag) / 900),
+                } as React.CSSProperties
+              }
+            >
+              {current?.kind === "film" ? (
+                playing ? (
+                  <iframe
+                    className="viewer__player"
+                    src={`https://player.vimeo.com/video/${current.id}?autoplay=1&title=0&byline=0&portrait=0`}
+                    title={piece.title}
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowFullScreen
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="viewer__poster"
+                    onClick={() => setPlaying(true)}
+                    aria-label={`Play ${piece.title}`}
+                  >
+                    {current.poster && (
+                      <Image
+                        src={current.poster}
+                        alt=""
+                        fill
+                        sizes="90vw"
+                        style={{ objectFit: "cover" }}
+                      />
+                    )}
+                    <span className="piece__play" aria-hidden="true" />
+                  </button>
+                )
+              ) : current?.kind === "still" ? (
+                <Image
+                  src={current.url}
+                  alt={current.caption || piece.title}
+                  width={2000}
+                  height={1500}
+                  sizes="90vw"
+                  className="viewer__still"
                 />
               ) : (
-                <button
-                  type="button"
-                  className="viewer__poster"
-                  onClick={() => setPlaying(true)}
-                  aria-label={`Play ${piece.title}`}
-                >
-                  {current.poster && (
-                    <Image
-                      src={current.poster}
-                      alt=""
-                      fill
-                      sizes="90vw"
-                      style={{ objectFit: "cover" }}
-                    />
-                  )}
-                  <span className="piece__play" aria-hidden="true" />
-                </button>
-              )
-            ) : current?.kind === "still" ? (
-              <Image
-                src={current.url}
-                alt={current.caption || piece.title}
-                width={2000}
-                height={1500}
-                sizes="90vw"
-                className="viewer__still"
-              />
-            ) : (
-              <p className="viewer__empty">This piece is still being hung.</p>
-            )}
-          </div>
+                <p className="viewer__empty">This piece is still being hung.</p>
+              )}
+            </div>
 
-          {slides.length > 1 && (
-            <button
-              type="button"
-              className="viewer__next"
-              onClick={(e) => {
-                e.stopPropagation();
-                step(1);
-              }}
-              aria-label="Next"
-            >
-              ›
-            </button>
-          )}
-
-          <footer className="viewer__foot" onClick={(e) => e.stopPropagation()}>
-            <span className="viewer__caption">
-              {current?.kind === "still" ? current.caption || "" : piece.description || ""}
-            </span>
             {slides.length > 1 && (
-              <span className="viewer__count">
-                {slide + 1} / {slides.length}
-              </span>
+              <button
+                type="button"
+                className="viewer__next"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  step(1);
+                }}
+                aria-label="Next"
+              >
+                ›
+              </button>
             )}
-            <a className="viewer__link" href={`/work/${section}/${piece.slug}`}>
-              Open page →
-            </a>
-          </footer>
-        </div>
-      )}
+
+            <footer
+              className="viewer__foot"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <span className="viewer__caption">
+                {current?.kind === "still"
+                  ? current.caption || ""
+                  : piece.description || ""}
+              </span>
+              {slides.length > 1 && (
+                <span className="viewer__count">
+                  {slide + 1} / {slides.length}
+                </span>
+              )}
+              <a
+                className="viewer__link"
+                href={`/work/${section}/${piece.slug}`}
+              >
+                Open page →
+              </a>
+            </footer>
+          </div>,
+          document.body,
+        )}
     </>
   );
 }

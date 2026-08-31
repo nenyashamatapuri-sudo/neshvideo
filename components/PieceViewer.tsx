@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { vimeoId, type PortfolioPiece } from "@/lib/supabase";
 
@@ -33,7 +34,7 @@ export default function PieceViewer({ piece }: { piece: PortfolioPiece }) {
         return (current + by + stills.length) % stills.length;
       });
     },
-    [stills.length]
+    [stills.length],
   );
 
   useEffect(() => {
@@ -111,77 +112,98 @@ export default function PieceViewer({ piece }: { piece: PortfolioPiece }) {
                   priority={i === 0 && !id}
                 />
               </button>
-              {still.caption && <p className="piece__caption">{still.caption}</p>}
+              {still.caption && (
+                <p className="piece__caption">{still.caption}</p>
+              )}
             </li>
           ))}
         </ul>
       )}
 
-      {open !== null && stills[open] && (
-        <div
-          className="lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label={`${piece.title}, image ${open + 1} of ${stills.length}`}
-          onClick={() => setOpen(null)}
-        >
-          <button
-            type="button"
-            className="lightbox__close"
+      {/*
+        Into <body>, past the arrival animation.
+
+        .piece carries a transform for its entrance, and a transformed ancestor
+        becomes the containing block for `position: fixed` — which pinned the
+        lightbox to the top of the article rather than the viewport.
+      */}
+      {typeof document !== "undefined" &&
+        open !== null &&
+        stills[open] &&
+        createPortal(
+          <div
+            className="lightbox"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${piece.title}, image ${open + 1} of ${stills.length}`}
             onClick={() => setOpen(null)}
-            aria-label="Close"
           >
-            ×
-          </button>
-
-          {stills.length > 1 && (
             <button
               type="button"
-              className="lightbox__prev"
-              onClick={(e) => {
-                e.stopPropagation();
-                step(-1);
-              }}
-              aria-label="Previous image"
+              className="lightbox__close"
+              onClick={() => setOpen(null)}
+              aria-label="Close"
             >
-              ‹
+              ×
             </button>
-          )}
 
-          <figure className="lightbox__figure" onClick={(e) => e.stopPropagation()}>
-            <Image
-              src={stills[open].url}
-              alt={stills[open].caption || `${piece.title} — ${open + 1}`}
-              width={2000}
-              height={1500}
-              sizes="90vw"
-              style={{ width: "auto", height: "auto", maxWidth: "90vw", maxHeight: "82vh" }}
-            />
-            <figcaption className="lightbox__caption">
-              {/* Captions are optional and arrive as "" from the CMS, so the
+            {stills.length > 1 && (
+              <button
+                type="button"
+                className="lightbox__prev"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  step(-1);
+                }}
+                aria-label="Previous image"
+              >
+                ‹
+              </button>
+            )}
+
+            <figure
+              className="lightbox__figure"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Image
+                src={stills[open].url}
+                alt={stills[open].caption || `${piece.title} — ${open + 1}`}
+                width={2000}
+                height={1500}
+                sizes="90vw"
+                style={{
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "90vw",
+                  maxHeight: "82vh",
+                }}
+              />
+              <figcaption className="lightbox__caption">
+                {/* Captions are optional and arrive as "" from the CMS, so the
                   title has to cover the empty string as well as the absence. */}
-              {stills[open].caption || piece.title}
-              <span className="lightbox__count">
-                {open + 1} / {stills.length}
-              </span>
-            </figcaption>
-          </figure>
+                {stills[open].caption || piece.title}
+                <span className="lightbox__count">
+                  {open + 1} / {stills.length}
+                </span>
+              </figcaption>
+            </figure>
 
-          {stills.length > 1 && (
-            <button
-              type="button"
-              className="lightbox__next"
-              onClick={(e) => {
-                e.stopPropagation();
-                step(1);
-              }}
-              aria-label="Next image"
-            >
-              ›
-            </button>
-          )}
-        </div>
-      )}
+            {stills.length > 1 && (
+              <button
+                type="button"
+                className="lightbox__next"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  step(1);
+                }}
+                aria-label="Next image"
+              >
+                ›
+              </button>
+            )}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
