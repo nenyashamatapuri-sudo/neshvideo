@@ -6,17 +6,28 @@ import * as THREE from "three";
 
 import { SHEETS } from "@/lib/spreads";
 import { damp, scroll } from "@/lib/scroll";
+import { dive, diveProgress } from "@/lib/transition";
 import { PAGE_H, PAGE_W, Sheet } from "./Sheet";
 
 const RING_YS = [0.28, 0, -0.28].map((t) => t * PAGE_H);
 const HOLE_X = 0.045 * PAGE_W; // must match the generator's hole position
-/** Lifts the spread clear of the masthead, which sits across its lower third. */
-const BINDER_Y = 0.1;
-/** Vertical extent the camera must always fit: a page plus breathing room. */
-const FRAME_H = PAGE_H * 1.2;
+/**
+ * The lift used to exist to clear the masthead. The masthead is printed on the
+ * pages now and the bar above it is gone on a wide screen, so there is nothing
+ * left to clear and the book sits where it should — in the middle.
+ */
+const BINDER_Y = 0.015;
+/**
+ * Vertical extent the camera must always fit.
+ *
+ * This was a fifth of a page of air, which on a desktop left the binder floating
+ * in the middle of a lot of nothing. It is now a hair over the page itself: the
+ * book is the page, so it should be filling it.
+ */
+const FRAME_H = PAGE_H * 1.045;
 /** Horizontal extent, closed (one page) and fully open (two). */
-const FRAME_W_CLOSED = PAGE_W * 1.06;
-const FRAME_W_OPEN = PAGE_W * 2.24;
+const FRAME_W_CLOSED = PAGE_W * 1.015;
+const FRAME_W_OPEN = PAGE_W * 2.1;
 /**
  * Below this viewport aspect a two-page spread can only be fitted by pushing
  * the camera so far back the pages become thumbnails. Portrait phones instead
@@ -116,6 +127,43 @@ export function Binder({
     scroll.eased = damp(scroll.eased, scroll.target, 6.5, dt);
     active.current = scroll.eased;
 
+    const aspectNow = viewport.width / Math.max(1, viewport.height);
+    const halfFovNow = (camera.fov * Math.PI) / 360;
+    const restingDistance = Math.max(
+      FRAME_H / (2 * Math.tan(halfFovNow)),
+      (FRAME_W_CLOSED + (FRAME_W_OPEN - FRAME_W_CLOSED) *
+        (aspectNow < SINGLE_PAGE_ASPECT ? 0 : Math.min(1, scroll.eased))) /
+        (2 * Math.tan(halfFovNow) * aspectNow)
+    );
+
+    /*
+     * Going into a section.
+     *
+     * The camera rushes the open spread until the page is past the lens. It is
+     * driven on its own clock rather than damped toward a target, because the
+     * route change happens on a timer and the two have to arrive together — a
+     * damped approach would still be easing when the page swapped underneath it.
+     *
+     * Everything else is dropped for the duration: the book squares up out of
+     * its pointer drift, so the last thing seen is the page flat on, not a page
+     * at an angle.
+     */
+    if (dive.running && group.current) {
+      const t = diveProgress(performance.now());
+
+      // Accelerating, but off the mark immediately. A cube put nearly all the
+      // travel into the last fifth, so the veil had already closed over a page
+      // that had barely moved — the dive was happening behind the curtain.
+      const e = t * t * (0.35 + 0.65 * t);
+
+      camera.position.z = restingDistance * (1 - 0.96 * e);
+      group.current.rotation.y = damp(group.current.rotation.y, 0, 9, dt);
+      group.current.rotation.x = damp(group.current.rotation.x, 0, 9, dt);
+      group.current.position.y = damp(group.current.position.y, 0, 9, dt);
+      group.current.scale.setScalar(1 + e * 0.16);
+      return;
+    }
+
     for (let i = 0; i < SHEETS.length; i++) {
       // Sheets turn one after another, each overlapping the next slightly so
       // the binder is never completely still mid-scroll.
@@ -124,8 +172,7 @@ export function Binder({
 
     if (!group.current) return;
 
-    const aspect = viewport.width / Math.max(1, viewport.height);
-    const singlePage = aspect < SINGLE_PAGE_ASPECT;
+    const singlePage = aspectNow < SINGLE_PAGE_ASPECT;
 
     // Closed, only the right-hand page exists, so slide the binder over to put
     // that single page in the middle of frame. It settles back as it opens —
@@ -137,21 +184,11 @@ export function Binder({
       6.5,
       dt
     );
-    // The lift exists to clear the masthead, which sits across the lower third
-    // on a wide screen. A phone has no masthead under it any more — the page is
-    // the whole view — so it centres instead, and the dead band the lift used to
-    // leave at the bottom goes with it.
     group.current.position.y = damp(group.current.position.y, singlePage ? 0 : BINDER_Y, 5, dt);
 
     // Dolly so the spread always fits, whatever the viewport. The camera eases
     // back as the binder opens out from one page to two.
-    const halfFov = (camera.fov * Math.PI) / 360;
-    const frameW = FRAME_W_CLOSED + (FRAME_W_OPEN - FRAME_W_CLOSED) * opened;
-    const distance = Math.max(
-      FRAME_H / (2 * Math.tan(halfFov)),
-      frameW / (2 * Math.tan(halfFov) * aspect)
-    );
-    camera.position.z = damp(camera.position.z, distance, 5, dt);
+    camera.position.z = damp(camera.position.z, restingDistance, 5, dt);
 
     // The whole binder drifts with the pointer — a few degrees, no more.
     group.current.rotation.y = damp(group.current.rotation.y, scroll.pointerX * 0.055, 3, dt);
